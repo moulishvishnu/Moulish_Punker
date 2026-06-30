@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Cyber Volleyball: Overdrive</title>
+    <style>
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background-color: #030305; 
+            font-family: 'Segoe UI', system-ui, sans-serif; user-select: none;
+            touch-action: none;
+        }
+        
+        /* Responsive Grid Scoreboard HUD */
+        #hud {
+            position: absolute;
+            top: env(safe-area-inset-top, 15px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 90%;
+            max-width: 500px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud-card {
+            background: linear-gradient(135deg, rgba(15, 15, 30, 0.85) 0%, rgba(5, 5, 15, 0.95) 100%);
+            border: 2px solid #00f2ff;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), inset 0 0 8px rgba(0, 242, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 5px;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .hud-card.high { border-color: #ff007f; box-shadow: 0 0 15px rgba(255, 0, 127, 0.2); }
+        .hud-card.multiplier { border-color: #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); }
+        
+        .hud-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #8a99ad; margin-bottom: 2px; font-weight: 700; }
+        .hud-value { font-size: 20px; font-weight: 900; font-family: monospace; }
+        
+        #instructions { 
+            position: absolute; bottom: calc(env(safe-area-inset-bottom, 15px) + 10px); 
+            left: 50%; transform: translateX(-50%); 
+            color: #00f2ff; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.6); pointer-events: none; z-index: 10;
+            background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 20px;
+            width: 85%; max-width: 320px; text-align: center;
+        }
+
+        /* Screen-agnostic Start Overlay */
+        #audio-prompt {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(4, 4, 8, 0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100; color: white;
+            padding: 20px; text-align: center;
+        }
+        h1 { font-size: clamp(24px, 6vw, 42px); margin-bottom: 15px; letter-spacing: 4px; text-shadow: 0 0 15px #00f2ff; text-transform: uppercase;}
+        
+        /* Requested Welcome Page Poster Integration */
+        .poster-art {
+            width: 200px;
+            height: 280px;
+            background-image: url('https://cdn.displate.com/artwork/270x380/2025-10-13/1efe42b9-accb-4ed0-bc25-7bf87cda9a63.jpg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+            border: 3px solid #ff007f;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.6);
+            margin-bottom: 25px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #00f2ff, #ff007f); border: none;
+            color: white; padding: 12px 35px; font-size: clamp(16px, 4vw, 20px); font-weight: bold;
+            border-radius: 30px; cursor: pointer; box-shadow: 0 0 30px rgba(0,242,255,0.4);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        
+        /* Media Query updates for Tablet/Desktop scales */
+        @media (min-width: 768px) {
+            .hud-card { padding: 12px 20px; }
+            .hud-value { font-size: 28px; }
+            .hud-label { font-size: 10px; }
+            #instructions { font-size: 13px; width: auto; max-width: none; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="audio-prompt">
+        <h1>Cyber Volleyball</h1>
+        <div class="poster-art"></div>
+        <button class="play-btn" onclick="initGameAudio()">Insert Coin</button>
+    </div>
+
+    <div id="hud">
+        <div class="hud-card">
+            <div class="hud-label">Score</div>
+            <div class="hud-value" id="score">0</div>
+        </div>
+        <div class="hud-card multiplier">
+            <div class="hud-label">Mult</div>
+            <div class="hud-value" id="mult">x1</div>
+        </div>
+        <div class="hud-card high">
+            <div class="hud-label">Hi-Score</div>
+            <div class="hud-value" id="highscore">0</div>
+        </div>
+    </div>
+    
+    <div id="instructions">Tap anywhere near the ball to strike!</div>
+
+    <script>
+        // --- 1. WEB AUDIO SYNTH ENGINE ---
+        let audioCtx, musicNode, filterNode;
+        
+        function initGameAudio() {
+            document.getElementById('audio-prompt').style.display = 'none';
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const bufferSize = audioCtx.sampleRate * 2; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                let t = i / audioCtx.sampleRate;
+                data[i] = Math.sin(2 * Math.PI * 60 * t + Math.sin(2 * Math.PI * 120 * t) * 0.4) * 0.12;
+                if (i % (audioCtx.sampleRate / 4) < 1500) data[i] += (Math.random() - 0.5) * 0.05;
+            }
+
+            musicNode = audioCtx.createBufferSource();
+            musicNode.buffer = buffer;
+            musicNode.loop = true;
+            filterNode = audioCtx.createBiquadFilter();
+            filterNode.type = 'lowpass';
+            filterNode.frequency.setValueAtTime(900, audioCtx.currentTime);
+
+            musicNode.connect(filterNode);
+            filterNode.connect(audioCtx.destination);
+            musicNode.start();
+        }
+
+        function playSpikeSound() {
+            if (!audioCtx) return;
+            let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(750, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function playMissSound() {
+            if (!audioCtx) return;
+            let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // --- 2. THREE.JS RUNTIME ENGINE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020205);
+        scene.fog = new THREE.FogExp2(0x020205, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const originalCamPos = new THREE.Vector3(0, 6, 13);
+        camera.position.copy(originalCamPos);
+        camera.lookAt(0, 1.5, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.body.appendChild(renderer.domElement);
+
+        // --- 3. GRAPHICS: ENHANCED ARENA ENVIRONMENT ---
+        scene.add(new THREE.AmbientLight(0x0e0e22, 1.5));
+        
+        const spot1 = new THREE.SpotLight(0xff007f, 5, 30, Math.PI/4, 0.5, 1);
+        spot1.position.set(-8, 12, 4); spot1.castShadow = true; scene.add(spot1);
+
+        const spot2 = new THREE.SpotLight(0x00f2ff, 5, 30, Math.PI/4, 0.5, 1);
+        spot2.position.set(8, 12, -4); spot2.castShadow = true; scene.add(spot2);
+
+        const courtGeo = new THREE.BoxGeometry(18, 0.2, 9);
+        const courtMat = new THREE.MeshStandardMaterial({ color: 0x080912, roughness: 0.1, metalness: 0.9 });
+        const court = new THREE.Mesh(courtGeo, courtMat);
+        court.position.y = -0.1; court.receiveShadow = true; scene.add(court);
+
+        const gridHelper = new THREE.GridHelper(18, 18, 0x00f2ff, 0xff007f);
+        gridHelper.position.y = 0.02; gridHelper.scale.set(1, 1, 0.5);
+        scene.add(gridHelper);
+
+        const ringGeo = new THREE.TorusGeometry(14, 0.1, 8, 64);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xff007f, transparent: true, opacity: 0.3 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2; ring.position.y = 0.05; scene.add(ring);
+
+        const netGroup = new THREE.Group();
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x00f2ff, metalness: 0.9, roughness: 0.1 });
+        const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 4);
+        const p1 = new THREE.Mesh(postGeo, postMat); p1.position.set(0, 2, 4.6); p1.castShadow = true;
+        const p2 = new THREE.Mesh(postGeo, postMat); p2.position.set(0, 2, -4.6); p2.castShadow = true;
+        netGroup.add(p1, p2);
+
+        const netMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.01, 1.4), new THREE.MeshBasicMaterial({ color: 0xff007f, wireframe: true, transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
+        netMesh.position.set(0, 2.5, 0); netMesh.rotation.y = Math.PI / 2; netMesh.scale.set(1, 1, 9.2);
+        netGroup.add(netMesh); scene.add(netGroup);
+
+        // --- 4. GRAPHICS: HUMAN 3D CYBER PLAYERS GENERATOR ---
+        function createCyberPlayer(colorHex) {
+            const playerGroup = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.5, roughness: 0.2 });
+            const glowMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 1.5 });
+
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), mat);
+            head.position.y = 2.4;
+            playerGroup.add(head);
+
+            // Visor
+            const visor = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.1, 0.35), glowMat);
+            visor.position.set(0, 2.45, 0.15);
+            playerGroup.add(visor);
+
+            // Torso
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.15, 1, 8), mat);
+            torso.position.y = 1.6;
+            playerGroup.add(torso);
+
+            // Left & Right Arms Groups (for pivots)
+            const leftArm = new THREE.Group(); leftArm.position.set(-0.4, 2.0, 0);
+            const lMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.8), mat);
+            lMesh.position.y = -0.3; lMesh.rotation.z = 0.2; leftArm.add(lMesh);
+            
+            const rightArm = new THREE.Group(); rightArm.position.set(0.4, 2.0, 0);
+            const rMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.8), mat);
+            rMesh.position.y = -0.3; rMesh.rotation.z = -0.2; rightArm.add(rMesh);
+
+            playerGroup.add(leftArm, rightArm);
+
+            // Legs
+            const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 1.1), mat);
+            leftLeg.position.set(-0.18, 0.6, 0); leftLeg.rotation.z = 0.05;
+            const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.08, 1.1), mat);
+            rightLeg.position.set(0.18, 0.6, 0); rightLeg.rotation.z = -0.05;
+            playerGroup.add(leftLeg, rightLeg);
+
+            playerGroup.castShadow = true;
+            playerGroup.traverse(child => { if(child.isMesh) child.castShadow = true; });
+
+            return { mesh: playerGroup, lArm: leftArm, rArm: rightArm, torso: torso, head: head };
+        }
+
+        const playerLeft = createCyberPlayer(0x00f2ff);
+        playerLeft.mesh.position.set(-5, 0, 0);
+        playerLeft.mesh.rotation.y = Math.PI / 2;
+        scene.add(playerLeft.mesh);
+
+        const playerRight = createCyberPlayer(0xff007f);
+        playerRight.mesh.position.set(5, 0, 0);
+        playerRight.mesh.rotation.y = -Math.PI / 2;
+        scene.add(playerRight.mesh);
+
+
+        // --- 5. BALL & INTERACTION TARGET MECHANICS ---
+        const ballRadius = 0.45;
+        const ball = new THREE.Mesh(
+            new THREE.SphereGeometry(ballRadius, 32, 32),
+            new THREE.MeshStandardMaterial({ color: 0x00f2ff, emissive: 0x00a2ff, emissiveIntensity: 2.0, roughness: 0.05, metalness: 0.2 })
+        );
+        ball.castShadow = true; scene.add(ball);
+
+        const targetFactor = window.innerWidth < 768 ? 5.5 : 4.2;
+        const hitBoxCollider = new THREE.Mesh(new THREE.SphereGeometry(ballRadius * targetFactor, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+        ball.add(hitBoxCollider);
+
+        const laserBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }));
+        scene.add(laserBeam);
+
+        const particleCount = 30;
+        const particleGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const velocities = [];
+        for(let i=0; i<particleCount*3; i++) positions[i] = 0;
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        const particleMaterial = new THREE.PointsMaterial({ color: 0xff007f, size: 0.3, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particleSystem);
+
+        // Game Loop Variables
+        let ballPos = new THREE.Vector3(4, 6, 0);
+        let ballVelocity = new THREE.Vector3(-0.06, 0.08, 0.01);
+        let gravity = -0.0035;
+        let baseScore = 0, streakMultiplier = 1, cumulativeScore = 0, highScore = 0;
+        let cameraShakeIntensity = 0;
+
+        // --- 6. CONTROLLERS ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function handleStrikeInput(clientX, clientY) {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            
+            if (raycaster.intersectObject(hitBoxCollider).length > 0) {
+                playSpikeSound();
+                cameraShakeIntensity = 0.16;
+
+                const laserStart = new THREE.Vector3().copy(camera.position).sub(new THREE.Vector3(0, 1, 2));
+                laserBeam.position.copy(laserStart).add(ball.position).multiplyScalar(0.5);
+                laserBeam.lookAt(ball.position);
+                laserBeam.scale.set(1, 1, laserStart.distanceTo(ball.position));
+                laserBeam.material.opacity = 1.0;
+
+                const pPos = particleGeometry.attributes.position.array;
+                velocities.length = 0;
+                for(let i=0; i<particleCount; i++) {
+                    pPos[i*3] = ball.position.x; pPos[i*3+1] = ball.position.y; pPos[i*3+2] = ball.position.z;
+                    velocities.push(new THREE.Vector3((Math.random()-0.5)*0.25, (Math.random()-0.5)*0.25, (Math.random()-0.5)*0.25));
+                }
+                particleGeometry.attributes.position.needsUpdate = true;
+                particleMaterial.opacity = 1.0;
+
+                baseScore++;
+                if (baseScore % 3 === 0) streakMultiplier++;
+                cumulativeScore += (100 * streakMultiplier);
+                
+                document.getElementById('score').innerText = cumulativeScore;
+                document.getElementById('mult').innerText = `x${streakMultiplier}`;
+                
+                if(cumulativeScore > highScore) {
+                    highScore = cumulativeScore;
+                    document.getElementById('highscore').innerText = highScore;
+                }
+
+                ballVelocity.y = 0.16;
+                ballVelocity.x = (ballPos.x > 0) ? -0.075 : 0.075;
+                ballVelocity.z = (Math.random() - 0.5) * 0.07;
+                
+                ball.material.color.setHex(0xff007f);
+                ball.material.emissive.setHex(0xff007f);
+            }
+        }
+
+        window.addEventListener('pointerdown', (e) => { if(e.pointerType === 'mouse') handleStrikeInput(e.clientX, e.clientY); });
+        window.addEventListener('touchstart', (e) => { if(e.touches.length > 0) handleStrikeInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+
+        // --- 7. ANIMATION loop & PLAYERS AI POSITION TRACKING ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if(laserBeam.material.opacity > 0) laserBeam.material.opacity -= 0.1;
+            if(particleMaterial.opacity > 0) {
+                particleMaterial.opacity -= 0.02;
+                const pPos = particleGeometry.attributes.position.array;
+                for(let i=0; i<particleCount; i++) {
+                    pPos[i*3] += velocities[i].x; pPos[i*3+1] += velocities[i].y; pPos[i*3+2] += velocities[i].z;
+                }
+                particleGeometry.attributes.position.needsUpdate = true;
+            }
+
+            // Screen Shake
+            if (cameraShakeIntensity > 0) {
+                camera.position.set(
+                    originalCamPos.x + (Math.random() - 0.5) * cameraShakeIntensity,
+                    originalCamPos.y + (Math.random() - 0.5) * cameraShakeIntensity,
+                    originalCamPos.z + (Math.random() - 0.5) * cameraShakeIntensity
+                );
+                cameraShakeIntensity -= 0.01;
+            } else {
+                camera.position.copy(originalCamPos);
+            }
+
+            // Ball Physics
+            ballVelocity.y += gravity;
+            ballPos.add(ballVelocity);
+
+            // Human 3D Player Tracking Logistics
+            // Left Player shifts to handle ball on its court side
+            if(ballPos.x < 0) {
+                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, 0.1);
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, -Math.PI, 0.15);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, -Math.PI, 0.15);
+            } else {
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, 0, 0.05);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, 0.05);
+            }
+
+            // Right Player shifts to handle ball on its court side
+            if(ballPos.x > 0) {
+                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, 0.1);
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, -Math.PI, 0.15);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, -Math.PI, 0.15);
+            } else {
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, 0, 0.05);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, 0, 0.05);
+            }
+
+            // Net collision
+            if (Math.abs(ballPos.x) < ballRadius && ballPos.y < 2.5 && ballPos.y > 1.2) {
+                ballVelocity.x *= -0.6; ballPos.x = Math.sign(ballVelocity.x) * ballRadius;
+            }
+
+            // Floor drop reset handler
+            if (ballPos.y <= ballRadius) {
+                playMissSound();
+                baseScore = 0; streakMultiplier = 1; cumulativeScore = 0;
+                document.getElementById('score').innerText = 0;
+                document.getElementById('mult').innerText = "x1";
+
+                ballPos.set((Math.random() > 0.5 ? 4 : -4), 6, (Math.random() - 0.5) * 2);
+                ballVelocity.set(ballPos.x > 0 ? -0.06 : 0.06, 0.06, 0);
+                ball.material.color.setHex(0x00f2ff); ball.material.emissive.setHex(0x00a2ff);
+            }
+
+            if (Math.abs(ballPos.z) > 4.2) ballVelocity.z *= -1;
+            if (Math.abs(ballPos.x) > 8.8) ballVelocity.x *= -1;
+
+            ball.position.copy(ballPos);
+            ball.rotation.x += 0.02; ball.rotation.y += 0.03;
+
+            renderer.render(scene, camera);
+        }
+
+        // Adaptive Responsive Viewport Resize Engine
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            camera.aspect = width / height;
+            
+            if(width < 768) {
+                camera.fov = 80; 
+                camera.position.set(0, 7, 15);
+                originalCamPos.set(0, 7, 15);
+                hitBoxCollider.geometry = new THREE.SphereGeometry(ballRadius * 5.5, 8, 8); 
+            } else {
+                camera.fov = 65;
+                camera.position.set(0, 6, 13);
+                originalCamPos.set(0, 6, 13);
+                hitBoxCollider.geometry = new THREE.SphereGeometry(ballRadius * 4.2, 8, 8);
+            }
+            
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        window.dispatchEvent(new Event('resize'));
+        animate();
+    </script>
+</body>
+</html>
