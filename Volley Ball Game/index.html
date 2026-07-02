@@ -127,9 +127,38 @@
     <div id="instructions">Slam the ball within the target zone!</div>
 
     <script>
-        // --- 1. AUDIO SYNTH ENGINE ---
-        let audioCtx, musicNode, filterNode;
+        // --- 1. GLOBAL STATE DECLARATIONS ---
+        let scene, camera, renderer, originalCamPos;
+        let keyLightLeft, keyLightRight, court, courtGrid;
+        let netGroup, audienceGroup, audienceMembers = [];
+        let playerLeft, playerRight;
         
+        // Ball Configuration
+        const ballRadius = 0.42;
+        let ballGroup, ballCore, ballRing1, ballRing2, hitBoxCollider;
+        let shockwave, shockwaveMat, particleGeometry, particleMaterial, particleSystem;
+        const particleCount = 45;
+        const velocities = [];
+
+        // Audio Context
+        let audioCtx, musicNode, filterNode;
+
+        // Calibrated Physics State (Framerate-independent Medium Speed Base Units)
+        let ballPos = new THREE.Vector3(4, 5.5, 0);
+        let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); 
+        let gravity = -14.0; 
+        
+        let baseScore = 0, streakMultiplier = 1, cumulativeScore = 0, highScore = 0;
+        let cameraShakeIntensity = 0;
+        
+        // Explicitly defined clock instance for delta tracking
+        const clock = new THREE.Clock(); 
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
+
+        // --- 2. AUDIO SYNTH ENGINE ---
         function initGameAudio() {
             document.getElementById('audio-prompt').style.display = 'none';
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -179,16 +208,16 @@
             osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         }
 
-        // --- 2. THREE.JS SCENE EXECUTION ---
-        const scene = new THREE.Scene();
+        // --- 3. THREE.JS SCENE EXECUTION ---
+        scene = new THREE.Scene();
         scene.background = new THREE.Color(0x010104);
         scene.fog = new THREE.FogExp2(0x010104, 0.025);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const originalCamPos = new THREE.Vector3(0, 7.0, 13.5);
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        originalCamPos = new THREE.Vector3(0, 7.0, 13.5);
         camera.position.copy(originalCamPos);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
         renderer.shadowMap.enabled = true;
@@ -197,26 +226,24 @@
         renderer.toneMappingExposure = 1.3;
         document.body.appendChild(renderer.domElement);
 
-        // --- 3. THE ARENA: EXTREME CYBERPUNK MEGAPLEX ---
+        // --- 4. THE ARENA SETUP ---
         scene.add(new THREE.AmbientLight(0x101428, 2.5));
         
-        const keyLightLeft = new THREE.SpotLight(0xccff00, 15, 45, Math.PI/3.5, 0.5, 0.8);
+        keyLightLeft = new THREE.SpotLight(0xccff00, 15, 45, Math.PI/3.5, 0.5, 0.8);
         keyLightLeft.position.set(-12, 18, 6); keyLightLeft.castShadow = true; scene.add(keyLightLeft);
 
-        const keyLightRight = new THREE.SpotLight(0x00f2ff, 15, 45, Math.PI/3.5, 0.5, 0.8);
+        keyLightRight = new THREE.SpotLight(0x00f2ff, 15, 45, Math.PI/3.5, 0.5, 0.8);
         keyLightRight.position.set(12, 18, -6); keyLightRight.castShadow = true; scene.add(keyLightRight);
 
-        // Jet Black High-Contrast Tech Floor
         const courtGeo = new THREE.BoxGeometry(18.6, 0.4, 9.6);
         const courtMat = new THREE.MeshStandardMaterial({ color: 0x020306, roughness: 0.1, metalness: 0.9 });
-        const court = new THREE.Mesh(courtGeo, courtMat);
+        court = new THREE.Mesh(courtGeo, courtMat);
         court.position.y = -0.2; court.receiveShadow = true; scene.add(court);
 
-        const courtGrid = new THREE.GridHelper(18, 18, 0x00f2ff, 0xccff00);
+        courtGrid = new THREE.GridHelper(18, 18, 0x00f2ff, 0xccff00);
         courtGrid.position.y = 0.03; courtGrid.scale.set(1, 1, 0.5);
         scene.add(courtGrid);
 
-        // Neon Stadium Lighting Rigs
         function createLightTower(x, z, color) {
             const tower = new THREE.Group();
             const beamGeo = new THREE.CylinderGeometry(0.1, 1.5, 18, 16, 1, true);
@@ -230,8 +257,7 @@
         createLightTower(-11, -7, 0xccff00);
         createLightTower(11, -7, 0x00f2ff);
 
-        // Pulsing Neon Net
-        const netGroup = new THREE.Group();
+        netGroup = new THREE.Group();
         const postMat = new THREE.MeshStandardMaterial({ color: 0x0a0c16, metalness: 0.9, roughness: 0.05 });
         const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5);
         const p1 = new THREE.Mesh(postGeo, postMat); p1.position.set(0, 2.25, 4.8); p1.castShadow = true;
@@ -245,18 +271,14 @@
         netMesh.position.set(0, 2.7, 0); netMesh.rotation.y = Math.PI / 2; netMesh.scale.set(1, 1, 9.6);
         netGroup.add(netMesh); scene.add(netGroup);
 
-        // --- 4. HOLOGRAPHIC CHEERING AUDIENCE ---
-        const audienceGroup = new THREE.Group();
-        const audienceMembers = [];
+        // --- 5. AUDIENCE STALKS ---
+        audienceGroup = new THREE.Group();
         const audGeo = new THREE.CylinderGeometry(0.15, 0.05, 0.6, 4);
         
-        // Generate stands of cheering cyber figures on the far side
         for (let i = 0; i < 24; i++) {
             const color = i % 2 === 0 ? 0x00f2ff : 0xccff00;
             const audMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5, wireframe: true });
             const member = new THREE.Mesh(audGeo, audMat);
-            
-            // Grid layout behind the court
             const row = i % 2;
             const col = Math.floor(i / 2);
             member.position.set(-8.5 + col * 0.75, 0.6 + row * 0.4, -5.5 - row * 0.6);
@@ -271,7 +293,7 @@
         }
         scene.add(audienceGroup);
 
-        // --- 5. ULTRA-CONTRAST MECHANICAL PLAYERS ---
+        // --- 6. CHARACTER FABRICATION ---
         function createAthleticCyberPlayer(colorHex) {
             const botGroup = new THREE.Group();
             const armorMat = new THREE.MeshStandardMaterial({ color: 0x0a0c14, metalness: 0.95, roughness: 0.05 });
@@ -316,17 +338,16 @@
             return { mesh: botGroup, lArm: leftArm, rArm: rightArm, head: head, torso: torso };
         }
 
-        const playerLeft = createAthleticCyberPlayer(0xccff00);
+        playerLeft = createAthleticCyberPlayer(0xccff00);
         playerLeft.mesh.position.set(-5, 0, 0); playerLeft.mesh.rotation.y = Math.PI / 2; scene.add(playerLeft.mesh);
 
-        const playerRight = createAthleticCyberPlayer(0x00f2ff);
+        playerRight = createAthleticCyberPlayer(0x00f2ff);
         playerRight.mesh.position.set(5, 0, 0); playerRight.mesh.rotation.y = -Math.PI / 2; scene.add(playerRight.mesh);
 
-        // --- 6. PLASMA BALL & CONTRAST RING VFX ---
-        const ballRadius = 0.42;
-        const ballGroup = new THREE.Group();
+        // --- 7. BALL & PLASMA RIGS ---
+        ballGroup = new THREE.Group();
         
-        const ballCore = new THREE.Mesh(
+        ballCore = new THREE.Mesh(
             new THREE.SphereGeometry(ballRadius, 32, 32),
             new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: 0xff6600, emissiveIntensity: 5.0, roughness: 0.1 })
         );
@@ -334,44 +355,29 @@
 
         const ringGeo = new THREE.TorusGeometry(ballRadius * 1.18, 0.04, 8, 32);
         const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const ballRing1 = new THREE.Mesh(ringGeo, ringMat); ballGroup.add(ballRing1);
-        const ballRing2 = new THREE.Mesh(ringGeo, ringMat); ballRing2.rotation.x = Math.PI/2; ballGroup.add(ballRing2);
+        ballRing1 = new THREE.Mesh(ringGeo, ringMat); ballGroup.add(ballRing1);
+        ballRing2 = new THREE.Mesh(ringGeo, ringMat); ballRing2.rotation.x = Math.PI/2; ballGroup.add(ballRing2);
         
         ballCore.castShadow = true; scene.add(ballGroup);
 
-        const targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
-        const hitBoxCollider = new THREE.Mesh(new THREE.SphereGeometry(ballRadius * targetFactor, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+        hitBoxCollider = new THREE.Mesh(new THREE.SphereGeometry(ballRadius * targetFactor, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
         ballGroup.add(hitBoxCollider);
 
         const shockwaveGeo = new THREE.RingGeometry(0.1, 3.5, 32);
-        const shockwaveMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 });
-        const shockwave = new THREE.Mesh(shockwaveGeo, shockwaveMat);
+        shockwaveMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 });
+        shockwave = new THREE.Mesh(shockwaveGeo, shockwaveMat);
         shockwave.rotation.x = Math.PI / 2; scene.add(shockwave);
 
-        const particleCount = 45;
-        const particleGeometry = new THREE.BufferGeometry();
+        particleGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
-        const velocities = [];
         for(let i=0; i<particleCount*3; i++) positions[i] = 0;
         particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
         
-        const particleMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.4, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
-        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        particleMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.4, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+        particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // --- CALIBRATED PHYSICS (Framerate-independent Medium Speed Base Units) ---
-        let ballPos = new THREE.Vector3(4, 5.5, 0);
-        let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); // Converted values to units-per-second values
-        let gravity = -14.0; // Scaled down slightly for balanced, medium-paced gravity drops
-        
-        let baseScore = 0, streakMultiplier = 1, cumulativeScore = 0, highScore = 0;
-        let cameraShakeIntensity = 0;
-        let clock = new THREE.Clock();
-
-        // --- 7. CONTROLLERS ---
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-
+        // --- 8. STRIKE INTERACTION ---
         function handleStrikeInput(clientX, clientY) {
             mouse.x = (clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(clientY / window.innerHeight) * 2 + 1;
@@ -411,7 +417,7 @@
                     document.getElementById('highscore').innerText = highScore;
                 }
 
-                // Medium Speed Spike Parameters
+                // Medium Speed Spike Trajectory Vectors
                 ballVelocity.y = 11.0;
                 ballVelocity.x = (ballPos.x > 0) ? -5.2 : 5.2;
                 ballVelocity.z = (Math.random() - 0.5) * 5.5;
@@ -424,15 +430,14 @@
         window.addEventListener('pointerdown', (e) => { if(e.pointerType === 'mouse') handleStrikeInput(e.clientX, e.clientY); });
         window.addEventListener('touchstart', (e) => { if(e.touches.length > 0) handleStrikeInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
 
-        // --- 8. ANIMATION LOOP & RUNTIME ---
+        // --- 9. UNIFORM PHYSICS LOOPS ---
         function animate() {
             requestAnimationFrame(animate);
             
-            // 1. Capture Time Delta for uniform movement across varying screen refresh rates (60Hz / 90Hz / 120Hz)
-            const delta = Math.min(clock.getDelta(), 0.1); // Cap delta to prevent massive physics leaps during performance drops
+            // Capture accurate delta step, capped to guard physics state from crashing during micro-stutters
+            const delta = Math.min(clock.getDelta(), 0.1); 
             const elapsedTime = clock.getElapsedTime();
 
-            // Animate and Cheer the Audience based on multipliers
             audienceMembers.forEach(member => {
                 const cheerIntensity = streakMultiplier > 1 ? 1.8 : 1.0;
                 member.mesh.position.y = member.baseY + Math.sin(elapsedTime * member.speed + member.offset) * 0.15 * cheerIntensity;
@@ -466,13 +471,13 @@
             }
             camera.lookAt(0, 1.8, 0);
 
-            // 2. Uniform Physics Implementation via Delta Scaling
+            // Framerate Independent Scalar Equations
             ballVelocity.y += gravity * delta;
             ballPos.x += ballVelocity.x * delta;
             ballPos.y += ballVelocity.y * delta;
             ballPos.z += ballVelocity.z * delta;
 
-            // Left Player AI tracking logic
+            // Opponent Left Automation
             if(ballPos.x < 0) {
                 playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, 9.0 * delta);
                 playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, Math.max(-7.5, ballPos.x - 0.5), 5.4 * delta);
@@ -485,7 +490,7 @@
                 playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, 6.0 * delta);
             }
 
-            // Right Player AI tracking logic
+            // Opponent Right Automation
             if(ballPos.x > 0) {
                 playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, 9.0 * delta);
                 playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, Math.min(7.5, ballPos.x + 0.5), 5.4 * delta);
@@ -502,6 +507,7 @@
                 ballVelocity.x *= -0.7; ballPos.x = Math.sign(ballVelocity.x) * ballRadius;
             }
 
+            // Ground Impact Fault Out
             if (ballPos.y <= ballRadius) {
                 playMissSound();
                 baseScore = 0; streakMultiplier = 1; cumulativeScore = 0;
@@ -523,7 +529,7 @@
             renderer.render(scene, camera);
         }
 
-        // Adaptive HD Resize Scale Window
+        // --- 10. WINDOW RESIZING GRAPHICS RATIO ---
         window.addEventListener('resize', () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
