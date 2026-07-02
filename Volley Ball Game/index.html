@@ -156,7 +156,7 @@
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        const targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
+        let targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
 
         // --- 2. AUDIO SYNTH ENGINE ---
         function initGameAudio() {
@@ -438,6 +438,13 @@
             const delta = Math.min(clock.getDelta(), 0.1); 
             const elapsedTime = clock.getElapsedTime();
 
+            // Framerate-independent exponential decay coefficients for smooth tracking on 60Hz vs 120Hz panels
+            const fastTrackRatio = 1 - Math.exp(-9.0 * delta);
+            const slowTrackRatio = 1 - Math.exp(-3.0 * delta);
+            const midTrackRatio  = 1 - Math.exp(-5.4 * delta);
+            const armTrackRatio  = 1 - Math.exp(-15.0 * delta);
+            const armReturnRatio = 1 - Math.exp(-6.0 * delta);
+
             audienceMembers.forEach(member => {
                 const cheerIntensity = streakMultiplier > 1 ? 1.8 : 1.0;
                 member.mesh.position.y = member.baseY + Math.sin(elapsedTime * member.speed + member.offset) * 0.15 * cheerIntensity;
@@ -477,30 +484,30 @@
             ballPos.y += ballVelocity.y * delta;
             ballPos.z += ballVelocity.z * delta;
 
-            // Opponent Left Automation
+            // Opponent Left Automation (Framerate-agnostic Tracking)
             if(ballPos.x < 0) {
-                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, 9.0 * delta);
-                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, Math.max(-7.5, ballPos.x - 0.5), 5.4 * delta);
-                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
-                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
+                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, fastTrackRatio);
+                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, Math.max(-7.5, ballPos.x - 0.5), midTrackRatio);
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, -Math.PI * 1.1, armTrackRatio);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, -Math.PI * 1.1, armTrackRatio);
             } else {
-                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, 0, 3.0 * delta);
-                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, -5.2, 3.6 * delta);
-                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, 0, 6.0 * delta);
-                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, 6.0 * delta);
+                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, 0, slowTrackRatio);
+                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, -5.2, midTrackRatio);
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, 0, armReturnRatio);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, armReturnRatio);
             }
 
-            // Opponent Right Automation
+            // Opponent Right Automation (Framerate-agnostic Tracking)
             if(ballPos.x > 0) {
-                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, 9.0 * delta);
-                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, Math.min(7.5, ballPos.x + 0.5), 5.4 * delta);
-                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
-                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
+                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, fastTrackRatio);
+                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, Math.min(7.5, ballPos.x + 0.5), midTrackRatio);
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, -Math.PI * 1.1, armTrackRatio);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, -Math.PI * 1.1, armTrackRatio);
             } else {
-                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, 0, 3.0 * delta);
-                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, 5.2, 3.6 * delta);
-                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, 0, 6.0 * delta);
-                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, 0, 6.0 * delta);
+                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, 0, slowTrackRatio);
+                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, 5.2, midTrackRatio);
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, 0, armReturnRatio);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, 0, armReturnRatio);
             }
 
             if (Math.abs(ballPos.x) < ballRadius && ballPos.y < 3.3 && ballPos.y > 1.0) {
@@ -523,6 +530,8 @@
             if (Math.abs(ballPos.x) > 8.9) ballVelocity.x *= -1;
 
             ballGroup.position.copy(ballPos);
+            
+            // Normalized visual rotation updates
             ballCore.rotation.x += 1.8 * delta; ballCore.rotation.y += 2.4 * delta;
             ballRing1.rotation.y += 3.6 * delta; ballRing2.rotation.x += 3.6 * delta;
 
