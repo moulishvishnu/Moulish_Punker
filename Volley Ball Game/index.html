@@ -274,7 +274,6 @@
         // --- 5. ULTRA-CONTRAST MECHANICAL PLAYERS ---
         function createAthleticCyberPlayer(colorHex) {
             const botGroup = new THREE.Group();
-            // Solid, deep matte armor templates to contrast neon elements
             const armorMat = new THREE.MeshStandardMaterial({ color: 0x0a0c14, metalness: 0.95, roughness: 0.05 });
             const neonMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 4.0 });
             const skinMat = new THREE.MeshStandardMaterial({ color: 0x181b28, metalness: 0.3, roughness: 0.4 });
@@ -285,7 +284,6 @@
             const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.18, 1.1, 6), armorMat);
             torso.position.y = 1.7; torso.rotation.y = Math.PI/6; botGroup.add(torso);
 
-            // Large Core Frame Matrix
             const powerCore = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), neonMat);
             powerCore.position.set(0, 1.8, 0.2); botGroup.add(powerCore);
 
@@ -294,7 +292,6 @@
             const visor = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.09, 0.2), neonMat);
             visor.position.set(0, 2.5, 0.12); botGroup.add(visor);
 
-            // Neon Highlighted Armor Shells
             const leftArm = new THREE.Group(); leftArm.position.set(-0.48, 2.1, 0);
             const lShoulder = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), neonMat); leftArm.add(lShoulder);
             const lBicep = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.75), skinMat); lBicep.position.y = -0.35; leftArm.add(lBicep);
@@ -319,11 +316,9 @@
             return { mesh: botGroup, lArm: leftArm, rArm: rightArm, head: head, torso: torso };
         }
 
-        // Team 1: Volt Yellow/Green (Extremely Visible)
         const playerLeft = createAthleticCyberPlayer(0xccff00);
         playerLeft.mesh.position.set(-5, 0, 0); playerLeft.mesh.rotation.y = Math.PI / 2; scene.add(playerLeft.mesh);
 
-        // Team 2: Electric Vivid Cyan
         const playerRight = createAthleticCyberPlayer(0x00f2ff);
         playerRight.mesh.position.set(5, 0, 0); playerRight.mesh.rotation.y = -Math.PI / 2; scene.add(playerRight.mesh);
 
@@ -331,14 +326,12 @@
         const ballRadius = 0.42;
         const ballGroup = new THREE.Group();
         
-        // High Contrast Hot Plasma Core (Orange-Red Core vs Blue/Green Field)
         const ballCore = new THREE.Mesh(
             new THREE.SphereGeometry(ballRadius, 32, 32),
             new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: 0xff6600, emissiveIntensity: 5.0, roughness: 0.1 })
         );
         ballGroup.add(ballCore);
 
-        // Hyper-Bright Tracker Rings
         const ringGeo = new THREE.TorusGeometry(ballRadius * 1.18, 0.04, 8, 32);
         const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const ballRing1 = new THREE.Mesh(ringGeo, ringMat); ballGroup.add(ballRing1);
@@ -350,13 +343,11 @@
         const hitBoxCollider = new THREE.Mesh(new THREE.SphereGeometry(ballRadius * targetFactor, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
         ballGroup.add(hitBoxCollider);
 
-        // Contrast Shockwave Ring
         const shockwaveGeo = new THREE.RingGeometry(0.1, 3.5, 32);
         const shockwaveMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 });
         const shockwave = new THREE.Mesh(shockwaveGeo, shockwaveMat);
         shockwave.rotation.x = Math.PI / 2; scene.add(shockwave);
 
-        // Spark Particle Burst Engine
         const particleCount = 45;
         const particleGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
@@ -368,10 +359,11 @@
         const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // Runtime Physics Variables
+        // --- CALIBRATED PHYSICS (Framerate-independent Medium Speed Base Units) ---
         let ballPos = new THREE.Vector3(4, 5.5, 0);
-        let ballVelocity = new THREE.Vector3(-0.065, 0.085, 0.015);
-        let gravity = -0.0038;
+        let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); // Converted values to units-per-second values
+        let gravity = -14.0; // Scaled down slightly for balanced, medium-paced gravity drops
+        
         let baseScore = 0, streakMultiplier = 1, cumulativeScore = 0, highScore = 0;
         let cameraShakeIntensity = 0;
         let clock = new THREE.Clock();
@@ -389,7 +381,6 @@
                 playSpikeSound();
                 cameraShakeIntensity = 0.25;
 
-                // Match shockwave colors directly with the strike side player colors
                 const activeColor = ballPos.x > 0 ? 0x00f2ff : 0xccff00;
 
                 shockwave.position.copy(ballGroup.position);
@@ -403,7 +394,7 @@
                 particleMaterial.color.setHex(activeColor);
                 for(let i=0; i<particleCount; i++) {
                     pPos[i*3] = ballGroup.position.x; pPos[i*3+1] = ballGroup.position.y; pPos[i*3+2] = ballGroup.position.z;
-                    velocities.push(new THREE.Vector3((Math.random()-0.5)*0.35, (Math.random()-0.4)*0.45, (Math.random()-0.5)*0.35));
+                    velocities.push(new THREE.Vector3((Math.random()-0.5)*15.0, (Math.random()-0.4)*20.0, (Math.random()-0.5)*15.0));
                 }
                 particleGeometry.attributes.position.needsUpdate = true;
                 particleMaterial.opacity = 1.0;
@@ -420,9 +411,10 @@
                     document.getElementById('highscore').innerText = highScore;
                 }
 
-                ballVelocity.y = 0.18;
-                ballVelocity.x = (ballPos.x > 0) ? -0.085 : 0.085;
-                ballVelocity.z = (Math.random() - 0.5) * 0.09;
+                // Medium Speed Spike Parameters
+                ballVelocity.y = 11.0;
+                ballVelocity.x = (ballPos.x > 0) ? -5.2 : 5.2;
+                ballVelocity.z = (Math.random() - 0.5) * 5.5;
                 
                 ballCore.material.color.setHex(0xffaa00);
                 ballCore.material.emissive.setHex(0xffaa00);
@@ -435,6 +427,9 @@
         // --- 8. ANIMATION LOOP & RUNTIME ---
         function animate() {
             requestAnimationFrame(animate);
+            
+            // 1. Capture Time Delta for uniform movement across varying screen refresh rates (60Hz / 90Hz / 120Hz)
+            const delta = Math.min(clock.getDelta(), 0.1); // Cap delta to prevent massive physics leaps during performance drops
             const elapsedTime = clock.getElapsedTime();
 
             // Animate and Cheer the Audience based on multipliers
@@ -444,15 +439,17 @@
             });
 
             if(shockwaveMat.opacity > 0) {
-                shockwaveMat.opacity -= 0.04;
-                shockwave.scale.addScalar(0.14);
+                shockwaveMat.opacity -= 2.4 * delta;
+                shockwave.scale.addScalar(8.4 * delta);
             }
 
             if(particleMaterial.opacity > 0) {
-                particleMaterial.opacity -= 0.025;
+                particleMaterial.opacity -= 1.5 * delta;
                 const pPos = particleGeometry.attributes.position.array;
                 for(let i=0; i<particleCount; i++) {
-                    pPos[i*3] += velocities[i].x; pPos[i*3+1] += velocities[i].y; pPos[i*3+2] += velocities[i].z;
+                    pPos[i*3] += velocities[i].x * delta; 
+                    pPos[i*3+1] += velocities[i].y * delta; 
+                    pPos[i*3+2] += velocities[i].z * delta;
                 }
                 particleGeometry.attributes.position.needsUpdate = true;
             }
@@ -463,39 +460,42 @@
                     originalCamPos.y + (Math.random() - 0.5) * cameraShakeIntensity,
                     originalCamPos.z + (Math.random() - 0.5) * cameraShakeIntensity
                 );
-                cameraShakeIntensity -= 0.015;
+                cameraShakeIntensity -= 0.9 * delta;
             } else {
                 camera.position.copy(originalCamPos);
             }
             camera.lookAt(0, 1.8, 0);
 
-            ballVelocity.y += gravity;
-            ballPos.add(ballVelocity);
+            // 2. Uniform Physics Implementation via Delta Scaling
+            ballVelocity.y += gravity * delta;
+            ballPos.x += ballVelocity.x * delta;
+            ballPos.y += ballVelocity.y * delta;
+            ballPos.z += ballVelocity.z * delta;
 
             // Left Player AI tracking logic
             if(ballPos.x < 0) {
-                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, 0.15);
-                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, Math.max(-7.5, ballPos.x - 0.5), 0.09);
-                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, -Math.PI * 1.1, 0.25);
-                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, -Math.PI * 1.1, 0.25);
+                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, ballPos.z, 9.0 * delta);
+                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, Math.max(-7.5, ballPos.x - 0.5), 5.4 * delta);
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
             } else {
-                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, 0, 0.05);
-                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, -5.2, 0.06);
-                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, 0, 0.1);
-                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, 0.1);
+                playerLeft.mesh.position.z = THREE.MathUtils.lerp(playerLeft.mesh.position.z, 0, 3.0 * delta);
+                playerLeft.mesh.position.x = THREE.MathUtils.lerp(playerLeft.mesh.position.x, -5.2, 3.6 * delta);
+                playerLeft.lArm.rotation.x = THREE.MathUtils.lerp(playerLeft.lArm.rotation.x, 0, 6.0 * delta);
+                playerLeft.rArm.rotation.x = THREE.MathUtils.lerp(playerLeft.rArm.rotation.x, 0, 6.0 * delta);
             }
 
             // Right Player AI tracking logic
             if(ballPos.x > 0) {
-                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, 0.15);
-                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, Math.min(7.5, ballPos.x + 0.5), 0.09);
-                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, -Math.PI * 1.1, 0.25);
-                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, -Math.PI * 1.1, 0.25);
+                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, ballPos.z, 9.0 * delta);
+                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, Math.min(7.5, ballPos.x + 0.5), 5.4 * delta);
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, -Math.PI * 1.1, 15.0 * delta);
             } else {
-                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, 0, 0.05);
-                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, 5.2, 0.06);
-                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, 0, 0.1);
-                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, 0, 0.1);
+                playerRight.mesh.position.z = THREE.MathUtils.lerp(playerRight.mesh.position.z, 0, 3.0 * delta);
+                playerRight.mesh.position.x = THREE.MathUtils.lerp(playerRight.mesh.position.x, 5.2, 3.6 * delta);
+                playerRight.lArm.rotation.x = THREE.MathUtils.lerp(playerRight.lArm.rotation.x, 0, 6.0 * delta);
+                playerRight.rArm.rotation.x = THREE.MathUtils.lerp(playerRight.rArm.rotation.x, 0, 6.0 * delta);
             }
 
             if (Math.abs(ballPos.x) < ballRadius && ballPos.y < 3.3 && ballPos.y > 1.0) {
@@ -509,7 +509,7 @@
                 document.getElementById('mult').innerText = "x1";
 
                 ballPos.set((Math.random() > 0.5 ? 4.5 : -4.5), 6, (Math.random() - 0.5) * 2.5);
-                ballVelocity.set(ballPos.x > 0 ? -0.065 : 0.065, 0.07, 0);
+                ballVelocity.set(ballPos.x > 0 ? -4.0 : 4.0, 4.2, 0);
                 ballCore.material.color.setHex(0xff3300); ballCore.material.emissive.setHex(0xff6600);
             }
 
@@ -517,8 +517,8 @@
             if (Math.abs(ballPos.x) > 8.9) ballVelocity.x *= -1;
 
             ballGroup.position.copy(ballPos);
-            ballCore.rotation.x += 0.03; ballCore.rotation.y += 0.04;
-            ballRing1.rotation.y += 0.06; ballRing2.rotation.x += 0.06;
+            ballCore.rotation.x += 1.8 * delta; ballCore.rotation.y += 2.4 * delta;
+            ballRing1.rotation.y += 3.6 * delta; ballRing2.rotation.x += 3.6 * delta;
 
             renderer.render(scene, camera);
         }
