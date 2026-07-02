@@ -1,0 +1,20 @@
+{
+  "name": "volley-ball-game",
+  "version": "1.0.0",
+  "description": "Cyber Volleyball: Overdrive - A 3D volleyball game",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Build complete - static HTML project'"
+  },
+  "keywords": [
+    "volleyball",
+    "game",
+    "three.js"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.14"
+  }
+}
