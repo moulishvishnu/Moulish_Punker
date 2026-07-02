@@ -1,0 +1,15 @@
+{
+  "name": "cyber-volleyball-overdrive",
+  "version": "1.0.0",
+  "description": "Cyber Volleyball: Overdrive - A volleyball game",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "keywords": ["volleyball", "game"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
