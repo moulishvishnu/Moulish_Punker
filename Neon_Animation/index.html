@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trance Neon Visualizer - Cross-Device Recording Fix</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #040408;
+      color: #f5f5f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    /* Controls Panel */
+    .controls-container {
+      background: rgba(8, 8, 16, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      z-index: 10;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .controls-container.hidden {
+      opacity: 0;
+      transform: translateY(-30px);
+      pointer-events: none;
+      position: absolute;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+      background: linear-gradient(45deg, #00f2fe, #7928ca, #ff007f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      color: #a1a1aa;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, select:focus {
+      border-color: #00f2fe;
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+
+    .btn-play {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #00f2fe 0%, #7928ca 100%);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .btn-play:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 242, 254, 0.45);
+    }
+
+    /* Live Display Stage */
+    .stage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .stage.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #visualizer-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* HUD Controls Layout */
+    .hud-controls {
+      position: absolute;
+      bottom: 40px;
+      z-index: 3;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-hud {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-hud:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-download-hud {
+      background: linear-gradient(135deg, #00f2fe 0%, #ff007f 100%);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+    }
+
+    .btn-download-hud:hover {
+      background: linear-gradient(135deg, #00f2fe 10%, #ff007f 90%);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+    }
+
+    .btn-download-hud:disabled {
+      background: #333;
+      color: #777;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls-container" id="setup-panel">
+    <h1>Trance Neon Sign</h1>
+    
+    <div class="form-group">
+      <label for="username">Enter Your Name</label>
+      <input type="text" id="username" placeholder="Type something..." maxlength="15" value="TRANCE NATION">
+    </div>
+
+    <div class="form-group">
+      <label for="music-track">Select Trance Vibe</label>
+      <select id="music-track">
+        <option value="classic">Classic 90s Anthem (Euphoric Melodic)</option>
+        <option value="psytrance">Psytrance (Aggressive Triplet Bass)</option>
+        <option value="uplifting">Uplifting Trance (Fast Driving Energy)</option>
+        <option value="progressive">Progressive Trance (Deep Hypnotic Groove)</option>
+        <option value="vocalgate">Gated Vocal Trance (Atmospheric Plucks)</option>
+      </select>
+    </div>
+
+    <button class="btn-play" id="btn-start">Ignite Glow</button>
+  </div>
+
+  <div class="stage" id="visualizer-stage">
+    <canvas id="visualizer-canvas"></canvas>
+
+    <div class="hud-controls">
+      <button class="btn-hud btn-download-hud" id="btn-download">Download 10s MP4</button>
+      <button class="btn-hud" id="btn-stop">Back to Setup</button>
+    </div>
+  </div>
+
+  <script>
+    const setupPanel = document.getElementById('setup-panel');
+    const visualizerStage = document.getElementById('visualizer-stage');
+    const usernameInput = document.getElementById('username');
+    const musicSelect = document.getElementById('music-track');
+    const canvas = document.getElementById('visualizer-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    const btnStart = document.getElementById('btn-start');
+    const btnStop = document.getElementById('btn-stop');
+    const btnDownload = document.getElementById('btn-download');
+
+    let audioCtx = null;
+    let analyser = null;
+    let audioDestinationNode = null; 
+    let syncIntervalId = null;
+    let animationFrameId = null;
+    let isPlaying = false;
+    let isRecording = false;
+    let displayName = "TRANCE NATION";
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    btnStart.addEventListener('click', () => {
+      displayName = usernameInput.value.trim().toUpperCase() || "TRANCE NATION";
+      setupPanel.classList.add('hidden');
+      visualizerStage.classList.add('active');
+      startSystem();
+    });
+
+    btnStop.addEventListener('click', () => {
+      stopSystem();
+      visualizerStage.classList.remove('active');
+      setupPanel.classList.remove('hidden');
+    });
+
+    function startSystem() {
+      isPlaying = true;
+      isRecording = false;
+      btnDownload.disabled = false;
+      btnDownload.textContent = "Download 10s MP4";
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 128; 
+
+      audioDestinationNode = audioCtx.createMediaStreamDestination();
+      
+      analyser.connect(audioCtx.destination);
+      renderVisuals();
+      runAudioGeneratorLoop(musicSelect.value);
+    }
+
+    function stopSystem() {
+      isPlaying = false;
+      isRecording = false;
+      if (syncIntervalId) clearInterval(syncIntervalId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (audioCtx) {
+        audioCtx.close().then(() => {
+          audioCtx = null;
+          analyser = null;
+        });
+      }
+    }
+
+    function runAudioGeneratorLoop(style) {
+      let step = 0;
+      let bpmInterval = 110; 
+      
+      if (style === 'classic') bpmInterval = 115;
+      if (style === 'psytrance') bpmInterval = 105;
+      if (style === 'uplifting') bpmInterval = 108;
+      if (style === 'progressive') bpmInterval = 125;
+      if (style === 'vocalgate') bpmInterval = 115;
+
+      syncIntervalId = setInterval(() => {
+        if (!isPlaying || !audioCtx) return;
+
+        if (style === 'classic') {
+          if (step % 4 === 0) playOscNode(55, 0.01, 0.2, 'sine', 0.8); 
+          if (step % 2 === 1) playOscNode(8000, 0.005, 0.04, 'triangle', 0.1); 
+          const melody = [293.66, 349.23, 440.00, 392.00, 349.23, 392.00, 440.00, 523.25];
+          playOscNode(melody[step % melody.length], 0.04, 0.18, 'sawtooth', 0.25);
+        } 
+        else if (style === 'psytrance') {
+          if (step % 4 === 0) {
+            playOscNode(60, 0.005, 0.15, 'sine', 0.9);
+          } else {
+            playOscNode(48.99, 0.01, 0.08, 'sawtooth', 0.6); 
+          }
+          if (step % 4 === 2) playOscNode(4000, 0.01, 0.05, 'triangle', 0.15);
+        } 
+        else if (style === 'uplifting') {
+          playOscNode(52, 0.01, 0.18, 'sine', 0.85); 
+          if (step % 4 !== 0) {
+            playOscNode(65.41, 0.02, 0.1, 'sawtooth', 0.5);
+          }
+          const arp = [329.63, 392.00, 493.88, 587.33, 493.88, 392.00];
+          if (step % 2 === 0) playOscNode(arp[step % arp.length], 0.02, 0.12, 'sine', 0.3);
+        } 
+        else if (style === 'progressive') {
+          if (step % 4 === 0) playOscNode(45, 0.02, 0.25, 'sine', 0.8); 
+          const progNotes = [73.42, 73.42, 87.31, 65.41];
+          if (step % 4 === 2) {
+            playOscNode(progNotes[Math.floor(step / 4) % progNotes.length], 0.06, 0.22, 'triangle', 0.5);
+          }
+        } 
+        else if (style === 'vocalgate') {
+          if (step % 4 === 0) playOscNode(50, 0.01, 0.2, 'sine', 0.8);
+          const gatePattern = [1, 0, 1, 1, 0, 1, 0, 1];
+          if (gatePattern[step % gatePattern.length] === 1) {
+            playOscNode(329.63, 0.05, 0.15, 'triangle', 0.2);
+            playOscNode(440.00, 0.05, 0.15, 'sine', 0.2);
+          }
+        }
+
+        step++;
+      }, bpmInterval);
+    }
+
+    function playOscNode(freq, attack, duration, type, volume) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        if (freq < 90 && type === 'sine') {
+          osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        }
+
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + attack);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        
+        gain.connect(analyser);
+        gain.connect(audioDestinationNode);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function renderVisuals() {
+      if (!isPlaying) return;
+
+      animationFrameId = requestAnimationFrame(renderVisuals);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
+
+      let totalVolume = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        totalVolume += dataArray[i];
+      }
+      const normVol = (totalVolume / bufferLength) / 255; 
+
+      // FIX ENGINE FOR MOBILE HARDWARE CAPTURES: 
+      // If recording, write a 100% solid color background block to force video encoder focus.
+      if (isRecording) {
+        ctx.fillStyle = '#040408'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = 'rgba(4, 4, 8, 0.25)'; // Smooth motion trails during live preview
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // DRAW AUDIO SPECTRUM BARS
+      const barWidth = (canvas.width / bufferLength) * 1.2;
+      for (let i = 0; i < bufferLength; i++) {
+        const value = dataArray[i];
+        const barHeight = (value / 255) * (canvas.height * 0.42); 
+        const hue = (i * (360 / bufferLength) + (Date.now() / 12)) % 360;
+
+        ctx.fillStyle = `hsla(${hue}, 100%, 65%, ${0.2 + (value/255) * 0.55})`;
+        const xPos = i * barWidth;
+
+        // Bottom Bars
+        ctx.fillRect(xPos, canvas.height - barHeight, barWidth - 3, barHeight);
+        ctx.fillRect(canvas.width - xPos - barWidth, canvas.height - barHeight, barWidth - 3, barHeight);
+        // Top Bars
+        ctx.fillRect(xPos, 0, barWidth - 3, barHeight);
+        ctx.fillRect(canvas.width - xPos - barWidth, 0, barWidth - 3, barHeight);
+      }
+
+      // DRAW TEXT LAYER DIRECTLY ON CANVAS 
+      ctx.save();
+      
+      const baseFontSize = Math.min(canvas.width * 0.09, 100); 
+      const finalFontSize = baseFontSize * (1 + (normVol * 0.25)); 
+      const textHue = (Date.now() / 15) % 360; 
+
+      ctx.font = `900 ${finalFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let shakeX = 0;
+      let shakeY = 0;
+      if (normVol > 0.20) {
+        shakeX = (Math.random() - 0.5) * 12;
+        shakeY = (Math.random() - 0.5) * 12;
+      }
+
+      const centerX = (canvas.width / 2) + shakeX;
+      const centerY = (canvas.height / 2) + shakeY;
+
+      // Heavy explicit drop shadows to anchor text brightness inside MP4 compression profiles
+      ctx.shadowColor = `hsla(${textHue}, 100%, 50%, 1)`;
+      ctx.shadowBlur = 25 + (normVol * 35);
+      
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#ffffff';
+      ctx.strokeText(displayName, centerX, centerY);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(displayName, centerX, centerY);
+      
+      ctx.restore();
+    }
+
+    /* Media Stream Recorder Engine with Fixed Encoding Fallbacks */
+    btnDownload.addEventListener('click', () => {
+      if (!isPlaying || !audioDestinationNode) return;
+
+      isRecording = true; // Flips frame system to Solid Mode instantly
+      btnDownload.disabled = true;
+      btnDownload.textContent = "Recording (0%)...";
+
+      const canvasStream = canvas.captureStream(30); 
+      const audioTrack = audioDestinationNode.stream.getAudioTracks()[0];
+      
+      if (audioTrack) {
+        canvasStream.addTrack(audioTrack);
+      }
+
+      // Support detection strings covering modern Android webviews & iOS Safari formats
+      let options = { mimeType: 'video/mp4;codecs=avc1,mp4a.40.2' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/mp4' };
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm;codecs=vp9,opus' }; 
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = { mimeType: 'video/webm' }; 
+      }
+
+      const mediaRecorder = new MediaRecorder(canvasStream, options);
+      const recordedChunks = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        isRecording = false; // Revert layout to preview motion trails safely
+        
+        const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `neon_trance_visualizer_${Date.now()}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        btnDownload.disabled = false;
+        btnDownload.textContent = "Download 10s MP4";
+      };
+
+      mediaRecorder.start();
+      
+      let elapsedSeconds = 0;
+      const progressTimer = setInterval(() => {
+        elapsedSeconds += 1;
+        btnDownload.textContent = `Recording (${elapsedSeconds * 10}%)...`;
+        if (elapsedSeconds >= 10) {
+          clearInterval(progressTimer);
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 10000);
+    });
+  </script>
+</body>
+</html>
