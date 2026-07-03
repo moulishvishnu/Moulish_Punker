@@ -83,7 +83,7 @@
             font-weight: 700;
         }
 
-        /* Camera Switch Control Overlay with expanded name styling */
+        /* Camera Switch Control Overlay */
         #cam-toggle {
             position: absolute;
             bottom: calc(env(safe-area-inset-bottom, 10px) + 5px);
@@ -176,7 +176,7 @@
         </div>
     </div>
     
-    <div id="commentary-box">[SYSTEM]: Welcome to the Insta-Grid Stadium Arena...</div>
+    <div id="commentary-box">Waiting for match authorization...</div>
     <div id="instructions">Slam the ball! Touch "Change Camera Angle"</div>
     <button id="cam-toggle" onclick="cycleCamera()">Change Camera Angle</button>
 
@@ -188,24 +188,23 @@
         let playerLeft, playerRight;
         let lightMasts = [];
         
-        // Camera View Mode Variables
         let currentCamMode = 0; 
         let targetCamPos = new THREE.Vector3();
         let targetCamLookAt = new THREE.Vector3(0, 1.8, 0);
         let actualCamLookAt = new THREE.Vector3(0, 1.8, 0);
         let dynamicFovBase = 54;
 
-        // Ball Configuration
         const ballRadius = 0.42;
         let ballGroup, ballCore, ballRing1, ballRing2, hitBoxCollider;
         let shockwave, shockwaveMat, particleGeometry, particleMaterial, particleSystem;
         const particleCount = 45;
         const velocities = [];
 
-        // Audio System
+        // Audio and Speech Variables
         let audioCtx, musicInterval;
+        let dynamicVoiceProfile = null;
+        let isArenaActive = false; // Flag to strict check user permission before any commentary triggers
 
-        // Calibrated Physics State
         let ballPos = new THREE.Vector3(4, 5.5, 0);
         let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); 
         let gravity = -14.0; 
@@ -218,30 +217,64 @@
         const mouse = new THREE.Vector2();
         let targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
 
-        // Commentary lines
+        // Pure Volleyball Related Commentary Arrays
         const hitCommentaries = [
-            "Splendid save on the baseline!",
-            "Incredible deflection from the cyber-athlete!",
-            "Power spike incoming!",
-            "Perfect physics conversion!",
-            "An absolute lightning-fast return!",
-            "A clinical redirection!"
+            "What a spectacular save on the baseline!",
+            "Incredible pancake dig to keep it alive!",
+            "Perfect set, a heavy spike is coming!",
+            "A beautiful cross-court bump!",
+            "Monster block cleanly redirected!",
+            "Great coverage by the back row!"
         ];
         const streakCommentaries = [
-            "The crowd is losing control! Multiplier up!",
-            "An unstoppable momentum pattern!",
-            "The arena power systems are overloading!",
-            "Absolute dominance on the cyber-court!",
-            "Unbelievable reflex array demonstration!"
+            "They are running away with this rally!",
+            "Unstoppable momentum at the net!",
+            "This side-out rhythm is flawless!",
+            "Absolute dominance on the attack!",
+            "What a clinic in transition play!"
         ];
         const faultCommentaries = [
-            "Ball out! Ground calibration failure.",
-            "Point dropped! Re-initializing standard serving sequence.",
-            "Unforced system error. Resetting rally matrix.",
-            "Impact missed. Gravity wins this cycle."
+            "Out of bounds! Point dropped.",
+            "Shanked pass, side-out!",
+            "Netted it! Fault!",
+            "Ball down on the court floor!"
         ];
 
+        // Speech Engine Profile Binding (No execution/speaking happens here)
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices();
+                dynamicVoiceProfile = voices.find(v => 
+                    v.name.toLowerCase().includes('natural') ||
+                    v.name.toLowerCase().includes('google') ||
+                    v.name.toLowerCase().includes('samantha') || 
+                    v.name.toLowerCase().includes('zira') || 
+                    v.name.toLowerCase().includes('hazel') ||
+                    v.name.toLowerCase().includes('moira')
+                ) || voices.find(v => v.lang.startsWith('en'));
+            }
+        }
+        
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
+
+        function triggerVoiceLine(text) {
+            if (!isArenaActive) return; // Hard block speech if player is still on the main menu splash screen
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (dynamicVoiceProfile) utterance.voice = dynamicVoiceProfile;
+                
+                utterance.pitch = 1.05; 
+                utterance.rate = 1.02; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         function triggerCommentary(type) {
+            if (!isArenaActive) return; // Hard block generation before match interface loads
             const el = document.getElementById('commentary-box');
             let pool = [];
             if(type === 'hit') pool = hitCommentaries;
@@ -251,13 +284,23 @@
             const txt = pool[Math.floor(Math.random() * pool.length)];
             el.innerText = `[ANNOUNCER]: ${txt}`;
             el.style.borderLeftColor = type === 'fault' ? '#833ab4' : (type === 'streak' ? '#fcb045' : '#e1306c');
+
+            triggerVoiceLine(txt);
         }
 
         // --- 2. ADVANCED SPORTS AUDIO SYNTH ENGINE ---
         function initGameAudio() {
             document.getElementById('audio-prompt').style.display = 'none';
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            loadVoices(); 
             
+            // Activate the arena logic and start announcements immediately inside safe callback
+            isArenaActive = true; 
+
+            const welcomeText = "Welcome live to the stadium! The service is up, let's play ball!";
+            document.getElementById('commentary-box').innerText = `[ANNOUNCER]: ${welcomeText}`;
+            triggerVoiceLine(welcomeText);
+
             let drumStep = 0;
             musicInterval = setInterval(() => {
                 if(!audioCtx) return;
@@ -279,7 +322,7 @@
                     bassOsc.type = 'triangle';
                     bassOsc.frequency.setValueAtTime(bassFreq, t);
                     bassGain.gain.setValueAtTime(0.15, t);
-                    bassGain.gain.linearRampToValueAtTime(0.01, t + 0.22);
+                    bassGain.linearRampToValueAtTime(0.01, t + 0.22);
                     bassOsc.connect(bassGain); bassGain.connect(audioCtx.destination);
                     bassOsc.start(t); bassOsc.stop(t + 0.25);
                 }
@@ -288,7 +331,7 @@
         }
 
         function playSpikeSound() {
-            if (!audioCtx) return;
+            if (!audioCtx || !isArenaActive) return;
             let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(880, audioCtx.currentTime);
@@ -300,7 +343,7 @@
         }
 
         function playMissSound() {
-            if (!audioCtx) return;
+            if (!audioCtx || !isArenaActive) return;
             let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'triangle'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
             osc.frequency.linearRampToValueAtTime(20, audioCtx.currentTime + 0.4);
@@ -520,6 +563,7 @@
 
         // --- 8. STRIKE INTERACTION & SELECTION MAPS ---
         function handleStrikeInput(clientX, clientY) {
+            if (!isArenaActive) return; // Prevent play interactions before matching starts
             mouse.x = (clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
