@@ -1,0 +1,21 @@
+{
+  "name": "Cyber Volleyball Overdrive",
+  "short_name": "Cyber Volley",
+  "description": "A high-octane cyber-themed volleyball game.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b020f",
+  "theme_color": "#E1306C",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
