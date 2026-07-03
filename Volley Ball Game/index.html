@@ -186,13 +186,12 @@
         let keyLightLeft, keyLightRight, court, courtGrid;
         let netGroup, audienceGroup, audienceMembers = [];
         let playerLeft, playerRight;
-        let lightMasts = [];
         
         let currentCamMode = 0; 
         let targetCamPos = new THREE.Vector3();
         let targetCamLookAt = new THREE.Vector3(0, 1.8, 0);
         let actualCamLookAt = new THREE.Vector3(0, 1.8, 0);
-        let dynamicFovBase = 54;
+        let dynamicFovBase = 38; // Drastically lowered FOV to physically zoom closer onto court action
 
         const ballRadius = 0.42;
         let ballGroup, ballCore, ballRing1, ballRing2, hitBoxCollider;
@@ -203,7 +202,7 @@
         // Audio and Speech Variables
         let audioCtx, musicInterval;
         let dynamicVoiceProfile = null;
-        let isArenaActive = false; // Flag to strict check user permission before any commentary triggers
+        let isArenaActive = false; 
 
         let ballPos = new THREE.Vector3(4, 5.5, 0);
         let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); 
@@ -217,7 +216,6 @@
         const mouse = new THREE.Vector2();
         let targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
 
-        // Pure Volleyball Related Commentary Arrays
         const hitCommentaries = [
             "What a spectacular save on the baseline!",
             "Incredible pancake dig to keep it alive!",
@@ -240,7 +238,6 @@
             "Ball down on the court floor!"
         ];
 
-        // Speech Engine Profile Binding (No execution/speaking happens here)
         function loadVoices() {
             if ('speechSynthesis' in window) {
                 const voices = window.speechSynthesis.getVoices();
@@ -261,7 +258,7 @@
         }
 
         function triggerVoiceLine(text) {
-            if (!isArenaActive) return; // Hard block speech if player is still on the main menu splash screen
+            if (!isArenaActive) return; 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); 
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -274,7 +271,7 @@
         }
 
         function triggerCommentary(type) {
-            if (!isArenaActive) return; // Hard block generation before match interface loads
+            if (!isArenaActive) return; 
             const el = document.getElementById('commentary-box');
             let pool = [];
             if(type === 'hit') pool = hitCommentaries;
@@ -288,13 +285,12 @@
             triggerVoiceLine(txt);
         }
 
-        // --- 2. ADVANCED SPORTS AUDIO SYNTH ENGINE ---
+        // --- 2. AUDIO SYNTH ENGINE ---
         function initGameAudio() {
             document.getElementById('audio-prompt').style.display = 'none';
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             loadVoices(); 
             
-            // Activate the arena logic and start announcements immediately inside safe callback
             isArenaActive = true; 
 
             const welcomeText = "Welcome live to the stadium! The service is up, let's play ball!";
@@ -371,7 +367,7 @@
         renderer.toneMappingExposure = 1.3;
         document.body.appendChild(renderer.domElement);
 
-        // --- 4. THE ARENA SETUP WITH STADIUM LIGHT MASTS ---
+        // --- 4. THE ARENA SETUP WITH DIRECT OVERHEAD LIGHTS (PILLARS REMOVED) ---
         scene.add(new THREE.AmbientLight(0x2d1738, 2.5));
         
         keyLightLeft = new THREE.SpotLight(0xfccc63, 15, 45, Math.PI/3.5, 0.5, 0.8);
@@ -389,38 +385,6 @@
         courtGrid.position.y = 0.03; courtGrid.scale.set(1, 1, 0.5);
         scene.add(courtGrid);
 
-        function createPhysicalStadiumTower(x, z, colorHex) {
-            const mastGroup = new THREE.Group();
-            
-            const poleGeo = new THREE.CylinderGeometry(0.12, 0.25, 12, 8);
-            const poleMat = new THREE.MeshStandardMaterial({ color: 0x261435, metalness: 0.8, roughness: 0.2 });
-            const pole = new THREE.Mesh(poleGeo, poleMat);
-            pole.position.y = 6;
-            mastGroup.add(pole);
-
-            const headGeo = new THREE.BoxGeometry(1.6, 0.8, 0.3);
-            const headMesh = new THREE.Mesh(headGeo, poleMat);
-            headMesh.position.set(0, 12, 0);
-            mastGroup.add(headMesh);
-
-            const beamGeo = new THREE.CylinderGeometry(0.1, 2.5, 20, 16, 1, true);
-            const beamMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
-            const beam = new THREE.Mesh(beamGeo, beamMat);
-            beam.position.set(0, 2, 4);
-            beam.rotation.x = Math.PI / 4.5;
-            headMesh.add(beam);
-
-            mastGroup.position.set(x, 0, z);
-            mastGroup.lookAt(0, 1, 0);
-            scene.add(mastGroup);
-            
-            lightMasts.push({ group: mastGroup, panel: headMesh, beam: beam, baseColor: colorHex });
-        }
-        createPhysicalStadiumTower(-11, -7, 0xfccc63);
-        createPhysicalStadiumTower(11, -7, 0xe1306c);
-        createPhysicalStadiumTower(-11, 7, 0xfccc63);
-        createPhysicalStadiumTower(11, 7, 0xe1306c);
-
         netGroup = new THREE.Group();
         const postMat = new THREE.MeshStandardMaterial({ color: 0x3a1954, metalness: 0.9, roughness: 0.05 });
         const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5);
@@ -435,26 +399,21 @@
         netMesh.position.set(0, 2.7, 0); netMesh.rotation.y = Math.PI / 2; netMesh.scale.set(1, 1, 9.6);
         netGroup.add(netMesh); scene.add(netGroup);
 
-        // --- 5. STADIUM FANS & CHEERLEADERS ---
+        // --- 5. STADIUM FANS ---
         audienceGroup = new THREE.Group();
         const fanGeo = new THREE.CylinderGeometry(0.15, 0.05, 0.5, 5);
-        const cheerleaderGeo = new THREE.ConeGeometry(0.14, 0.6, 4);
 
         function setupBleachers(zDirection) {
             for (let row = 0; row < 3; row++) {
                 for (let col = 0; col < 20; col++) {
-                    const isCheerleader = (col === 2 || col === 7 || col === 12 || col === 17) && row === 0;
-                    const geo = isCheerleader ? cheerleaderGeo : fanGeo;
-                    
-                    const color = isCheerleader ? 0xff0055 : (col % 2 === 0 ? 0xe1306c : 0xfccc63);
                     const mat = new THREE.MeshStandardMaterial({ 
-                        color: color, 
-                        emissive: color, 
-                        emissiveIntensity: isCheerleader ? 2.5 : 0.8,
+                        color: col % 2 === 0 ? 0xe1306c : 0xfccc63, 
+                        emissive: col % 2 === 0 ? 0xe1306c : 0xfccc63, 
+                        emissiveIntensity: 0.8,
                         roughness: 0.2
                     });
                     
-                    const member = new THREE.Mesh(geo, mat);
+                    const member = new THREE.Mesh(fanGeo, mat);
                     const posX = -8.5 + col * 0.9;
                     const posY = 0.4 + row * 0.5;
                     const posZ = (5.6 + row * 0.8) * zDirection;
@@ -467,8 +426,7 @@
                         mesh: member,
                         baseY: posY,
                         offset: Math.random() * Math.PI * 2,
-                        speed: (isCheerleader ? 7.0 : 4.0) + Math.random() * 3.0,
-                        isCheer: isCheerleader
+                        speed: 4.0 + Math.random() * 3.0
                     });
                 }
             }
@@ -561,9 +519,9 @@
         particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // --- 8. STRIKE INTERACTION & SELECTION MAPS ---
+        // --- 8. STRIKE INTERACTION ---
         function handleStrikeInput(clientX, clientY) {
-            if (!isArenaActive) return; // Prevent play interactions before matching starts
+            if (!isArenaActive) return; 
             mouse.x = (clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -619,7 +577,6 @@
         window.addEventListener('pointerdown', (e) => { if(e.pointerType === 'mouse') handleStrikeInput(e.clientX, e.clientY); });
         window.addEventListener('touchstart', (e) => { if(e.touches.length > 0) handleStrikeInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
 
-        // --- CAMERA CYCLE OPERATION MODULE ---
         function cycleCamera() {
             currentCamMode = (currentCamMode + 1) % 3;
         }
@@ -633,12 +590,12 @@
             if (currentCamMode === 0) {
                 targetCamPos.set(0, 7.0 * widthScale, 13.5 * widthScale);
                 targetCamLookAt.set(0, 1.8, 0);
-                camera.fov = aspect < 1.6 ? Math.min(85, 58 * widthScale) : dynamicFovBase;
+                camera.fov = aspect < 1.6 ? Math.min(85, dynamicFovBase * widthScale) : dynamicFovBase;
             } 
             else if (currentCamMode === 1) {
                 targetCamPos.set(ballPos.x * 0.4, 6.5 + (ballPos.y * 0.2), 12.0);
                 targetCamLookAt.set(ballPos.x * 0.7, ballPos.y * 0.5, ballPos.z * 0.5);
-                camera.fov = 58;
+                camera.fov = 38;
             } 
             else if (currentCamMode === 2) {
                 if(ballPos.x > 0) {
@@ -648,11 +605,11 @@
                     targetCamPos.set(-11.0, 5.5, ballPos.z * 0.4);
                     targetCamLookAt.set(3.0, 1.5, 0);
                 }
-                camera.fov = 60;
+                camera.fov = 40;
             }
         }
 
-        // --- 9. UNIFORM PHYSICS & LIGHT RENDERING LOOPS ---
+        // --- 9. PHYSICS & LOOPS ---
         function animate() {
             requestAnimationFrame(animate);
             
@@ -681,20 +638,7 @@
 
             audienceMembers.forEach(member => {
                 const multiFactor = 1.0 + (streakMultiplier * 0.4);
-                const jumpHeight = member.isCheer ? 0.35 : 0.18;
-                member.mesh.position.y = member.baseY + Math.abs(Math.sin(elapsedTime * member.speed * (multiFactor * 0.7) + member.offset)) * jumpHeight * multiFactor;
-                if(member.isCheer) member.mesh.rotation.z = Math.sin(elapsedTime * 10.0) * 0.2;
-            });
-
-            lightMasts.forEach((mast, index) => {
-                const speedMult = 1.0 + (streakMultiplier * 0.3);
-                mast.panel.rotation.y = Math.sin(elapsedTime * 2.0 * speedMult + index) * 0.25;
-                
-                if (streakMultiplier > 2) {
-                    mast.beam.material.color.setHSL((elapsedTime * 0.15 + (index * 0.25)) % 1, 1, 0.5);
-                } else {
-                    mast.beam.material.color.setHex(mast.baseColor);
-                }
+                member.mesh.position.y = member.baseY + Math.abs(Math.sin(elapsedTime * member.speed * (multiFactor * 0.7) + member.offset)) * 0.18 * multiFactor;
             });
 
             if(shockwaveMat.opacity > 0) {
@@ -768,7 +712,6 @@
             renderer.render(scene, camera);
         }
 
-        // --- 10. DYNAMIC VISUAL FIELD RESPONSIVENESS ---
         window.addEventListener('resize', () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
