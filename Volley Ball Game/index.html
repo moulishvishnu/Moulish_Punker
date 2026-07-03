@@ -9,132 +9,158 @@
         window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
-    
+    <link rel="manifest" href="manifest.json">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cyber Volley">
+
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b020f">
     <style>
         * { box-sizing: border-box; }
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background-color: #0c0514; 
+            overflow: hidden; background-color: #0b020f; 
             font-family: 'Orbitron', 'Segoe UI', system-ui, sans-serif; user-select: none;
             touch-action: none;
         }
         
-        /* Floating Scoreboard Layout - Positioned directly above the court net */
+        /* High-Contrast Instagram Arcade HUD */
         #hud {
             position: absolute;
-            top: 15%; /* Brought down directly into the central field of view above the court */
+            top: env(safe-area-inset-top, 20px);
             left: 50%;
             transform: translateX(-50%);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            width: 94%;
-            max-width: 440px;
+            gap: 15px;
+            width: 92%;
+            max-width: 600px;
             pointer-events: none;
             z-index: 10;
         }
         .hud-card {
-            background: linear-gradient(135deg, rgba(131, 58, 180, 0.9) 0%, rgba(253, 29, 29, 0.9) 50%, rgba(252, 176, 69, 0.9) 100%);
-            border: 2px solid #ffffff;
-            clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);
-            box-shadow: 0 4px 15px rgba(253, 29, 29, 0.4);
-            padding: 6px 4px;
+            background: linear-gradient(135deg, rgba(20, 5, 25, 0.95) 0%, rgba(10, 2, 15, 0.98) 100%);
+            border: 2px solid #E1306C;
+            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+            box-shadow: 0 0 25px rgba(225, 48, 108, 0.4);
+            padding: 10px 8px;
             color: white;
             text-align: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
-        .hud-card.high { border-color: #fcb045; box-shadow: 0 4px 15px rgba(252, 176, 69, 0.4); }
-        .hud-card.multiplier { border-color: #833ab4; box-shadow: 0 4px 15px rgba(131, 58, 180, 0.4); }
+        .hud-card.high { border-color: #833AB4; box-shadow: 0 0 25px rgba(131, 58, 180, 0.4); }
+        .hud-card.multiplier { border-color: #F77737; box-shadow: 0 0 25px rgba(247, 119, 55, 0.4); }
         
-        .hud-label { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: #ffffff; opacity: 0.9; margin-bottom: 2px; font-weight: 800; }
-        .hud-value { font-size: 16px; font-weight: 900; font-family: monospace; text-shadow: 0 0 6px rgba(255,255,255,0.6); }
+        .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #ffb3d1; margin-bottom: 4px; font-weight: 800; }
+        .hud-value { font-size: 24px; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px rgba(255,255,255,0.6); }
         
-        /* Live Commentary Banner - Docked neatly right beneath the central scoreboard */
-        #commentary-box {
+        /* Camera Control Rig Overlay */
+        #camera-rig-controls {
             position: absolute;
-            top: calc(15% + 56px);
+            top: calc(env(safe-area-inset-top, 20px) + 85px);
             left: 50%;
             transform: translateX(-50%);
-            width: 88%;
-            max-width: 400px;
-            background: rgba(12, 5, 20, 0.9);
-            border-left: 3.5px solid #e1306c;
-            padding: 6px 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+        .cam-btn {
+            background: rgba(15, 3, 20, 0.85);
+            border: 1px solid #C13584;
+            color: #fff;
+            padding: 6px 14px;
             font-size: 11px;
-            color: #ffffff;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            pointer-events: none;
-            z-index: 10;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            font-style: italic;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(193, 53, 132, 0.2);
+            transition: all 0.2s ease;
+        }
+        .cam-btn.active, .cam-btn:hover {
+            background: linear-gradient(45deg, #E1306C, #C13584);
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(225, 48, 108, 0.6);
         }
 
         #instructions { 
-            position: absolute; bottom: calc(env(safe-area-inset-bottom, 10px) + 5px); 
+            position: absolute; bottom: calc(env(safe-area-inset-bottom, 20px) + 10px); 
             left: 50%; transform: translateX(-50%); 
-            color: #fccc63; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(252, 176, 69, 0.7); pointer-events: none; z-index: 10;
-            background: rgba(12, 5, 20, 0.93); padding: 8px 18px; 
-            border: 1.5px solid #e1306c;
-            border-radius: 4px; width: 85%; max-width: 380px; text-align: center;
+            color: #F77737; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+            text-shadow: 0 0 12px rgba(247, 119, 55, 0.8); pointer-events: none; z-index: 10;
+            background: rgba(15, 2, 20, 0.9); padding: 8px 20px; 
+            border: 2px solid #C13584;
+            border-radius: 4px; width: 85%; max-width: 360px; text-align: center;
             font-weight: 700;
         }
 
-        /* Camera Switch Control Overlay */
-        #cam-toggle {
-            position: absolute;
-            bottom: calc(env(safe-area-inset-bottom, 10px) + 5px);
-            right: 15px;
-            background: linear-gradient(135deg, #833ab4, #e1306c);
-            border: 1.5px solid #ffffff;
-            color: #ffffff;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            font-size: 10px;
-            padding: 8px 12px;
-            cursor: pointer;
-            z-index: 20;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(225,48,108,0.4);
-            border-radius: 4px;
-            letter-spacing: 0.5px;
-        }
-        #cam-toggle:active { background: #fd1d1d; }
-
         #audio-prompt {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #2c1a3a 0%, #0c0514 100%); 
+            background: radial-gradient(circle at center, #240a2b 0%, #07010a 100%); 
             display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100; color: white;
             padding: 20px; text-align: center;
         }
         h1 { 
             font-size: clamp(28px, 7vw, 54px); margin-bottom: 25px; letter-spacing: 6px; 
-            text-shadow: 0 0 20px #e1306c, 0 0 40px #fcb045; text-transform: uppercase;
+            text-shadow: 0 0 20px #E1306C, 0 0 40px #833AB4; text-transform: uppercase;
             font-weight: 900;
         }
         
+        /* Upgraded Pure CSS Cyber Volleyball Animated Poster Graphic with Instagram Theme */
         .poster-art {
             width: 220px; height: 300px;
-            background-image: url('https://cdn.displate.com/artwork/270x380/2025-10-13/1efe42b9-accb-4ed0-bc25-7bf87cda9a63.jpg');
-            background-size: cover; background-position: center;
-            border-radius: 4px; border: 3px solid #fd1d1d;
-            box-shadow: 0 0 35px rgba(253, 29, 29, 0.7); margin-bottom: 35px;
-            animation: float 2.5s ease-in-out infinite;
+            background: radial-gradient(circle at top right, #405DE6 0%, #1c0526 100%);
+            border-radius: 8px; border: 3px solid #E1306C;
+            box-shadow: 0 0 35px rgba(225, 48, 108, 0.5), inset 0 0 20px rgba(131, 58, 180, 0.3); 
+            margin-bottom: 35px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 3s ease-in-out infinite;
+        }
+        .poster-art::before {
+            content: "🏐";
+            font-size: 80px;
+            filter: drop-shadow(0 0 20px #E1306C) drop-shadow(0 0 40px #833AB4);
+            z-index: 2;
+            animation: spinBall 6s linear infinite;
+        }
+        /* Neon Net Background Overlay Graphic */
+        .poster-art::after {
+            content: "";
+            position: absolute;
+            width: 140%; height: 40%;
+            bottom: 0; left: -20%;
+            background: linear-gradient(rgba(193, 53, 132, 0) 0%, rgba(193, 53, 132, 0.4) 100%);
+            border-top: 2px solid #C13584;
+            box-shadow: 0 0 15px #C13584;
+            transform: perspective(100px) rotateX(40deg);
+            background-size: 20px 20px;
+            background-image: linear-gradient(to right, rgba(225,48,108,0.5) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(225,48,108,0.5) 1px, transparent 1px);
+            z-index: 1;
         }
 
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-12px) rotate(1deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        @keyframes spinBall {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.08); }
+            100% { transform: rotate(360deg) scale(1); }
         }
 
         .play-btn {
-            background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%); border: 2px solid white;
+            background: linear-gradient(135deg, #F77737 0%, #E1306C 50%, #833AB4 100%); border: none;
             color: #fff; padding: 15px 45px; font-size: clamp(18px, 4vw, 24px); font-weight: 900;
-            cursor: pointer; box-shadow: 0 0 35px rgba(253,29,29,0.5);
+            cursor: pointer; box-shadow: 0 0 35px rgba(225,48,108,0.6);
             text-transform: uppercase; letter-spacing: 3px;
             clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
             transition: transform 0.1s ease;
@@ -142,12 +168,10 @@
         .play-btn:active { transform: scale(0.95); }
         
         @media (min-width: 768px) {
-            .hud-card { padding: 8px 16px; }
-            .hud-value { font-size: 20px; }
-            .hud-label { font-size: 9px; }
-            #instructions { font-size: 13px; width: auto; max-width: none; }
-            #commentary-box { font-size: 12px; max-width: 440px; top: calc(15% + 64px); }
-            #cam-toggle { font-size: 11px; padding: 8px 16px; }
+            .hud-card { padding: 14px 25px; }
+            .hud-value { font-size: 32px; }
+            .hud-label { font-size: 11px; }
+            #instructions { font-size: 14px; width: auto; max-width: none; }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -156,7 +180,7 @@
 <body>
 
     <div id="audio-prompt">
-        <h1>Cyber Volleyball<br><span style="font-size:0.5em; color:#fcb045;">Overdrive</span></h1>
+        <h1>Cyber Volleyball<br><span style="font-size:0.5em; color:#E1306C;">Overdrive</span></h1>
         <div class="poster-art"></div>
         <button class="play-btn" onclick="initGameAudio()">Enter Arena</button>
     </div>
@@ -175,33 +199,30 @@
             <div class="hud-value" id="highscore">0</div>
         </div>
     </div>
+
+    <div id="camera-rig-controls">
+        <button class="cam-btn active" onclick="setCameraAngle('broadcast', this)">Broadcast</button>
+        <button class="cam-btn" onclick="setCameraAngle('tactical', this)">Tactical</button>
+        <button class="cam-btn" onclick="setCameraAngle('action', this)">Action View</button>
+    </div>
     
-    <div id="commentary-box">Waiting for match authorization...</div>
-    <div id="instructions">Slam the ball! Touch "Change Camera Angle"</div>
-    <button id="cam-toggle" onclick="cycleCamera()">Change Camera Angle</button>
+    <div id="instructions">Slam the ball within the target zone!</div>
 
     <script>
         // --- 1. GLOBAL STATE DECLARATIONS ---
-        let scene, camera, renderer;
+        let scene, camera, renderer, originalCamPos;
         let keyLightLeft, keyLightRight, court, courtGrid;
         let netGroup, audienceGroup, audienceMembers = [];
         let playerLeft, playerRight;
+        let currentCameraMode = 'broadcast';
         
-        let currentCamMode = 0; 
-        let targetCamPos = new THREE.Vector3();
-        let targetCamLookAt = new THREE.Vector3(0, 1.4, 0);
-        let actualCamLookAt = new THREE.Vector3(0, 1.4, 0);
-        let dynamicFovBase = 38; 
-
         const ballRadius = 0.42;
         let ballGroup, ballCore, ballRing1, ballRing2, hitBoxCollider;
         let shockwave, shockwaveMat, particleGeometry, particleMaterial, particleSystem;
         const particleCount = 45;
         const velocities = [];
 
-        let audioCtx, musicInterval;
-        let dynamicVoiceProfile = null;
-        let isArenaActive = false; 
+        let audioCtx, musicNode, filterNode;
 
         let ballPos = new THREE.Vector3(4, 5.5, 0);
         let ballVelocity = new THREE.Vector3(-4.0, 5.5, 1.0); 
@@ -211,122 +232,55 @@
         let cameraShakeIntensity = 0;
         
         const clock = new THREE.Clock(); 
+
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let targetFactor = window.innerWidth < 768 ? 6.2 : 4.6;
 
-        const hitCommentaries = [
-            "What a spectacular save on the baseline!",
-            "Incredible pancake dig to keep it alive!",
-            "Perfect set, a heavy spike is coming!",
-            "A beautiful cross-court bump!",
-            "Monster block cleanly redirected!",
-            "Great coverage by the back row!"
-        ];
-        const streakCommentaries = [
-            "They are running away with this rally!",
-            "Unstoppable momentum at the net!",
-            "This side-out rhythm is flawless!",
-            "Absolute dominance on the attack!",
-            "What a clinic in transition play!"
-        ];
-        const faultCommentaries = [
-            "Out of bounds! Point dropped.",
-            "Shanked pass, side-out!",
-            "Netted it! Fault!",
-            "Ball down on the court floor!"
-        ];
-
-        function loadVoices() {
-            if ('speechSynthesis' in window) {
-                const voices = window.speechSynthesis.getVoices();
-                dynamicVoiceProfile = voices.find(v => 
-                    v.name.toLowerCase().includes('natural') ||
-                    v.name.toLowerCase().includes('google') ||
-                    v.name.toLowerCase().includes('samantha') || 
-                    v.name.toLowerCase().includes('zira') || 
-                    v.name.toLowerCase().includes('hazel') ||
-                    v.name.toLowerCase().includes('moira')
-                ) || voices.find(v => v.lang.startsWith('en'));
+        // --- 2. AUDIO SYNTH & HUMAN SPEECH COMMENTARY ENGINE ---
+        function initGameAudio() {
+            document.getElementById('audio-prompt').style.display = 'none';
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            const bufferSize = audioCtx.sampleRate * 2; 
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            
+            for (let i = 0; i < bufferSize; i++) {
+                let t = i / audioCtx.sampleRate;
+                data[i] = Math.sin(2 * Math.PI * 60 * t + Math.sin(2 * Math.PI * 130 * t) * 0.45) * 0.15;
+                if (i % (audioCtx.sampleRate / 4) < 1800) data[i] += (Math.random() - 0.5) * 0.06;
             }
-        }
-        
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.onvoiceschanged = loadVoices;
-            loadVoices();
+
+            musicNode = audioCtx.createBufferSource();
+            musicNode.buffer = buffer;
+            musicNode.loop = true;
+            filterNode = audioCtx.createBiquadFilter();
+            filterNode.type = 'lowpass';
+            filterNode.frequency.setValueAtTime(1100, audioCtx.currentTime);
+
+            musicNode.connect(filterNode);
+            filterNode.connect(audioCtx.destination);
+            musicNode.start();
+            
+            triggerCommentary("Arena initialized. Welcome to Cyber Overdrive.");
         }
 
-        function triggerVoiceLine(text) {
-            if (!isArenaActive) return; 
+        function triggerCommentary(text) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); 
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                if (dynamicVoiceProfile) utterance.voice = dynamicVoiceProfile;
-                
-                utterance.pitch = 1.05; 
-                utterance.rate = 1.02; 
+                const voices = window.speechSynthesis.getVoices();
+                const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Zira') || v.lang.startsWith('en'));
+                if (femaleVoice) utterance.voice = femaleVoice;
+                utterance.pitch = 1.15;
+                utterance.rate = 1.05;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        function triggerCommentary(type) {
-            if (!isArenaActive) return; 
-            const el = document.getElementById('commentary-box');
-            let pool = [];
-            if(type === 'hit') pool = hitCommentaries;
-            else if(type === 'streak') pool = streakCommentaries;
-            else if(type === 'fault') pool = faultCommentaries;
-            
-            const txt = pool[Math.floor(Math.random() * pool.length)];
-            el.innerText = `[ANNOUNCER]: ${txt}`;
-            el.style.borderLeftColor = type === 'fault' ? '#833ab4' : (type === 'streak' ? '#fcb045' : '#e1306c');
-
-            triggerVoiceLine(txt);
-        }
-
-        // --- 2. AUDIO SYNTH ENGINE ---
-        function initGameAudio() {
-            document.getElementById('audio-prompt').style.display = 'none';
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            loadVoices(); 
-            
-            isArenaActive = true; 
-
-            const welcomeText = "Welcome live to the stadium! The service is up, let's play ball!";
-            document.getElementById('commentary-box').innerText = `[ANNOUNCER]: ${welcomeText}`;
-            triggerVoiceLine(welcomeText);
-
-            let drumStep = 0;
-            musicInterval = setInterval(() => {
-                if(!audioCtx) return;
-                let t = audioCtx.currentTime;
-                
-                let kickOsc = audioCtx.createOscillator();
-                let kickGain = audioCtx.createGain();
-                kickOsc.frequency.setValueAtTime(140, t);
-                kickOsc.frequency.exponentialRampToValueAtTime(42, t + 0.12);
-                kickGain.gain.setValueAtTime(0.3, t);
-                kickGain.gain.exponentialRampToValueAtTime(0.01, t + 0.14);
-                kickOsc.connect(kickGain); kickGain.connect(audioCtx.destination);
-                kickOsc.start(t); kickOsc.stop(t + 0.15);
-
-                if(drumStep % 2 === 0) {
-                    let bassOsc = audioCtx.createOscillator();
-                    let bassGain = audioCtx.createGain();
-                    let bassFreq = (drumStep % 4 === 0) ? 55 : 65.4; 
-                    bassOsc.type = 'triangle';
-                    bassOsc.frequency.setValueAtTime(bassFreq, t);
-                    bassGain.gain.setValueAtTime(0.15, t);
-                    bassGain.linearRampToValueAtTime(0.01, t + 0.22);
-                    bassOsc.connect(bassGain); bassGain.connect(audioCtx.destination);
-                    bassOsc.start(t); bassOsc.stop(t + 0.25);
-                }
-                drumStep = (drumStep + 1) % 8;
-            }, 300); 
-        }
-
         function playSpikeSound() {
-            if (!audioCtx || !isArenaActive) return;
+            if (!audioCtx) return;
             let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(880, audioCtx.currentTime);
@@ -335,10 +289,13 @@
             gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+
+            const spikes = ["Incredible spike!", "Clean smash!", "What an overdrive velocity!", "Furious hit!"];
+            triggerCommentary(spikes[Math.floor(Math.random() * spikes.length)]);
         }
 
         function playMissSound() {
-            if (!audioCtx || !isArenaActive) return;
+            if (!audioCtx) return;
             let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'triangle'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
             osc.frequency.linearRampToValueAtTime(20, audioCtx.currentTime + 0.4);
@@ -346,16 +303,34 @@
             gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+
+            const misses = ["Point missed!", "Fault on court!", "Resetting parameters.", "Ball dropped!"];
+            triggerCommentary(misses[Math.floor(Math.random() * misses.length)]);
         }
 
-        // --- 3. THREE.JS SCENE EXECUTION ---
+        // --- 3. INTERACTIVE CAMERA SWITCH CONTROL ---
+        function setCameraAngle(mode, element) {
+            currentCameraMode = mode;
+            document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
+            if(element) element.classList.add('active');
+            
+            if (mode === 'broadcast') {
+                originalCamPos.set(0, 7.0, 13.5);
+            } else if (mode === 'tactical') {
+                originalCamPos.set(0, 15.0, 0.1);
+            } else if (mode === 'action') {
+                originalCamPos.set(-6.0, 4.5, 9.0);
+            }
+        }
+
+        // --- 4. THREE.JS SCENE EXECUTION ---
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x120a1c);
-        scene.fog = new THREE.FogExp2(0x120a1c, 0.025);
+        scene.background = new THREE.Color(0x0a0212);
+        scene.fog = new THREE.FogExp2(0x0a0212, 0.025);
 
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        targetCamPos.set(0, 6.2, 12.0);
-        camera.position.copy(targetCamPos);
+        originalCamPos = new THREE.Vector3(0, 7.0, 13.5);
+        camera.position.copy(originalCamPos);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -366,26 +341,39 @@
         renderer.toneMappingExposure = 1.3;
         document.body.appendChild(renderer.domElement);
 
-        // --- 4. THE ARENA SETUP ---
-        scene.add(new THREE.AmbientLight(0x2d1738, 2.5));
+        // --- 5. THE INSTAGRAM ARENA SETUP ---
+        scene.add(new THREE.AmbientLight(0x200a2b, 2.5)); 
         
-        keyLightLeft = new THREE.SpotLight(0xfccc63, 15, 45, Math.PI/3.5, 0.5, 0.8);
+        keyLightLeft = new THREE.SpotLight(0xE1306C, 15, 45, Math.PI/3.5, 0.5, 0.8); 
         keyLightLeft.position.set(-12, 18, 6); keyLightLeft.castShadow = true; scene.add(keyLightLeft);
 
-        keyLightRight = new THREE.SpotLight(0xe1306c, 15, 45, Math.PI/3.5, 0.5, 0.8);
+        keyLightRight = new THREE.SpotLight(0x833AB4, 15, 45, Math.PI/3.5, 0.5, 0.8); 
         keyLightRight.position.set(12, 18, -6); keyLightRight.castShadow = true; scene.add(keyLightRight);
 
-        const courtGeo = new THREE.BoxGeometry(18.6, 0.4, 9.6);
-        const courtMat = new THREE.MeshStandardMaterial({ color: 0x1a0d26, roughness: 0.1, metalness: 0.8 });
+        const courtGeo = new THREE.BoxGeometry(18.6, 0.4, 9.6); 
+        const courtMat = new THREE.MeshStandardMaterial({ color: 0x14041a, roughness: 0.1, metalness: 0.9 }); 
         court = new THREE.Mesh(courtGeo, courtMat);
         court.position.y = -0.2; court.receiveShadow = true; scene.add(court);
 
-        courtGrid = new THREE.GridHelper(18, 18, 0xe1306c, 0xfccc63);
+        courtGrid = new THREE.GridHelper(18, 18, 0xE1306C, 0xF77737); 
         courtGrid.position.y = 0.03; courtGrid.scale.set(1, 1, 0.5);
         scene.add(courtGrid);
 
+        function createLightTower(x, z, color) {
+            const tower = new THREE.Group();
+            const beamGeo = new THREE.CylinderGeometry(0.1, 1.5, 18, 16, 1, true);
+            const beamMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+            const beam = new THREE.Mesh(beamGeo, beamMat);
+            beam.position.y = 9; beam.rotation.z = x > 0 ? -0.12 : 0.12;
+            tower.add(beam);
+            tower.position.set(x, 0, z);
+            scene.add(tower);
+        }
+        createLightTower(-11, -7, 0xE1306C);
+        createLightTower(11, -7, 0x833AB4);
+
         netGroup = new THREE.Group();
-        const postMat = new THREE.MeshStandardMaterial({ color: 0x3a1954, metalness: 0.9, roughness: 0.05 });
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x1a0526, metalness: 0.9, roughness: 0.05 }); 
         const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 4.5);
         const p1 = new THREE.Mesh(postGeo, postMat); p1.position.set(0, 2.25, 4.8); p1.castShadow = true;
         const p2 = new THREE.Mesh(postGeo, postMat); p2.position.set(0, 2.25, -4.8); p2.castShadow = true;
@@ -393,53 +381,42 @@
 
         const netMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(1, 1.6), 
-            new THREE.MeshStandardMaterial({ color: 0x833ab4, emissive: 0x833ab4, emissiveIntensity: 3.0, wireframe: true, side: THREE.DoubleSide })
+            new THREE.MeshStandardMaterial({ color: 0xC13584, emissive: 0xC13584, emissiveIntensity: 3.0, wireframe: true, side: THREE.DoubleSide })
         );
         netMesh.position.set(0, 2.7, 0); netMesh.rotation.y = Math.PI / 2; netMesh.scale.set(1, 1, 9.6);
         netGroup.add(netMesh); scene.add(netGroup);
 
-        // --- 5. STADIUM FANS ---
+        // --- 6. DOUBLE-SIDED CYBER FANS ---
         audienceGroup = new THREE.Group();
-        const fanGeo = new THREE.CylinderGeometry(0.15, 0.05, 0.5, 5);
-
-        function setupBleachers(zDirection) {
-            for (let row = 0; row < 3; row++) {
-                for (let col = 0; col < 20; col++) {
-                    const mat = new THREE.MeshStandardMaterial({ 
-                        color: col % 2 === 0 ? 0xe1306c : 0xfccc63, 
-                        emissive: col % 2 === 0 ? 0xe1306c : 0xfccc63, 
-                        emissiveIntensity: 0.8,
-                        roughness: 0.2
-                    });
-                    
-                    const member = new THREE.Mesh(fanGeo, mat);
-                    const posX = -8.5 + col * 0.9;
-                    const posY = 0.4 + row * 0.5;
-                    const posZ = (5.6 + row * 0.8) * zDirection;
-                    
-                    member.position.set(posX, posY, posZ);
-                    if(zDirection > 0) member.rotation.y = Math.PI;
-                    
-                    audienceGroup.add(member);
-                    audienceMembers.push({
-                        mesh: member,
-                        baseY: posY,
-                        offset: Math.random() * Math.PI * 2,
-                        speed: 4.0 + Math.random() * 3.0
-                    });
-                }
-            }
+        const audGeo = new THREE.CylinderGeometry(0.15, 0.05, 0.6, 4);
+        
+        for (let i = 0; i < 48; i++) {
+            const color = i % 2 === 0 ? 0xE1306C : 0xF77737;
+            const audMat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5, wireframe: true });
+            const member = new THREE.Mesh(audGeo, audMat);
+            
+            const row = i % 2;
+            const col = Math.floor((i % 24) / 2);
+            const sideZ = i < 24 ? (-5.5 - row * 0.6) : (5.5 + row * 0.6);
+            
+            member.position.set(-8.5 + col * 0.75, 0.6 + row * 0.4, sideZ);
+            
+            audienceGroup.add(member);
+            audienceMembers.push({
+                mesh: member,
+                baseY: member.position.y,
+                offset: Math.random() * Math.PI * 2,
+                speed: 4 + Math.random() * 4
+            });
         }
-        setupBleachers(-1);
-        setupBleachers(1);
         scene.add(audienceGroup);
 
-        // --- 6. CHARACTER FABRICATION ---
+        // --- 7. CHARACTER FABRICATION ---
         function createAthleticCyberPlayer(colorHex) {
             const botGroup = new THREE.Group();
-            const armorMat = new THREE.MeshStandardMaterial({ color: 0x1d0f2b, metalness: 0.95, roughness: 0.05 });
+            const armorMat = new THREE.MeshStandardMaterial({ color: 0x12031a, metalness: 0.95, roughness: 0.05 }); 
             const neonMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 4.0 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0x331949, metalness: 0.3, roughness: 0.4 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0x2b0f3d, metalness: 0.3, roughness: 0.4 }); 
 
             const pelvis = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 12), armorMat);
             pelvis.position.y = 1.1; botGroup.add(pelvis);
@@ -479,18 +456,18 @@
             return { mesh: botGroup, lArm: leftArm, rArm: rightArm, head: head, torso: torso };
         }
 
-        playerLeft = createAthleticCyberPlayer(0xfccc63);
+        playerLeft = createAthleticCyberPlayer(0xE1306C);
         playerLeft.mesh.position.set(-5, 0, 0); playerLeft.mesh.rotation.y = Math.PI / 2; scene.add(playerLeft.mesh);
 
-        playerRight = createAthleticCyberPlayer(0xe1306c);
+        playerRight = createAthleticCyberPlayer(0x833AB4);
         playerRight.mesh.position.set(5, 0, 0); playerRight.mesh.rotation.y = -Math.PI / 2; scene.add(playerRight.mesh);
 
-        // --- 7. BALL & PLASMA RIGS ---
+        // --- 8. BALL & PLASMA RIGS ---
         ballGroup = new THREE.Group();
         
         ballCore = new THREE.Mesh(
             new THREE.SphereGeometry(ballRadius, 32, 32),
-            new THREE.MeshStandardMaterial({ color: 0xfd1d1d, emissive: 0xfd1d1d, emissiveIntensity: 5.0, roughness: 0.1 })
+            new THREE.MeshStandardMaterial({ color: 0xF77737, emissive: 0xE1306C, emissiveIntensity: 5.0, roughness: 0.1 })
         );
         ballGroup.add(ballCore);
 
@@ -518,18 +495,17 @@
         particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // --- 8. STRIKE INTERACTION ---
+        // --- 9. STRIKE INTERACTION ---
         function handleStrikeInput(clientX, clientY) {
-            if (!isArenaActive) return; 
             mouse.x = (clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             
             if (raycaster.intersectObject(hitBoxCollider).length > 0) {
                 playSpikeSound();
-                cameraShakeIntensity = 0.22;
+                cameraShakeIntensity = 0.25;
 
-                const activeColor = ballPos.x > 0 ? 0xe1306c : 0xfccc63;
+                const activeColor = ballPos.x > 0 ? 0x833AB4 : 0xE1306C;
 
                 shockwave.position.copy(ballGroup.position);
                 shockwave.position.y = 0.05;
@@ -548,12 +524,7 @@
                 particleMaterial.opacity = 1.0;
 
                 baseScore++;
-                if (baseScore % 3 === 0) {
-                    streakMultiplier++;
-                    triggerCommentary('streak');
-                } else {
-                    triggerCommentary('hit');
-                }
+                if (baseScore % 3 === 0) streakMultiplier++;
                 cumulativeScore += (100 * streakMultiplier);
                 
                 document.getElementById('score').innerText = cumulativeScore;
@@ -568,53 +539,20 @@
                 ballVelocity.x = (ballPos.x > 0) ? -5.2 : 5.2;
                 ballVelocity.z = (Math.random() - 0.5) * 5.5;
                 
-                ballCore.material.color.setHex(0xfcb045);
-                ballCore.material.emissive.setHex(0xfcb045);
+                ballCore.material.color.setHex(0xF77737);
+                ballCore.material.emissive.setHex(0xE1306C);
             }
         }
 
         window.addEventListener('pointerdown', (e) => { if(e.pointerType === 'mouse') handleStrikeInput(e.clientX, e.clientY); });
         window.addEventListener('touchstart', (e) => { if(e.touches.length > 0) handleStrikeInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
 
-        function cycleCamera() {
-            currentCamMode = (currentCamMode + 1) % 3;
-        }
-        window.addEventListener('keydown', (e) => {
-            if(e.key.toLowerCase() === 'c') cycleCamera();
-        });
-
-        function calculateTargetCameraMatrix(aspect) {
-            const widthScale = aspect < 1.6 ? (1.45 / aspect) : 1.0;
-
-            if (currentCamMode === 0) {
-                targetCamPos.set(0, 5.8 * widthScale, 11.2 * widthScale);
-                targetCamLookAt.set(0, 1.4, 0);
-                camera.fov = aspect < 1.6 ? Math.min(85, dynamicFovBase * widthScale) : dynamicFovBase;
-            } 
-            else if (currentCamMode === 1) {
-                targetCamPos.set(ballPos.x * 0.4, 6.0 + (ballPos.y * 0.2), 10.5);
-                targetCamLookAt.set(ballPos.x * 0.7, ballPos.y * 0.5, ballPos.z * 0.5);
-                camera.fov = 38;
-            } 
-            else if (currentCamMode === 2) {
-                if(ballPos.x > 0) {
-                    targetCamPos.set(9.5, 4.8, ballPos.z * 0.4);
-                    targetCamLookAt.set(-2.5, 1.3, 0);
-                } else {
-                    targetCamPos.set(-9.5, 4.8, ballPos.z * 0.4);
-                    targetCamLookAt.set(2.5, 1.3, 0);
-                }
-                camera.fov = 40;
-            }
-        }
-
-        // --- 9. PHYSICS & LOOPS ---
+        // --- 10. UNIFORM PHYSICS LOOPS ---
         function animate() {
             requestAnimationFrame(animate);
             
             const delta = Math.min(clock.getDelta(), 0.1); 
             const elapsedTime = clock.getElapsedTime();
-            const aspect = window.innerWidth / window.innerHeight;
 
             const fastTrackRatio = 1 - Math.exp(-9.0 * delta);
             const slowTrackRatio = 1 - Math.exp(-3.0 * delta);
@@ -622,22 +560,9 @@
             const armTrackRatio  = 1 - Math.exp(-15.0 * delta);
             const armReturnRatio = 1 - Math.exp(-6.0 * delta);
 
-            calculateTargetCameraMatrix(aspect);
-            camera.position.lerp(targetCamPos, 1 - Math.exp(-6.5 * delta));
-            actualCamLookAt.lerp(targetCamLookAt, 1 - Math.exp(-7.0 * delta));
-
-            if (cameraShakeIntensity > 0) {
-                camera.position.x += (Math.random() - 0.5) * cameraShakeIntensity;
-                camera.position.y += (Math.random() - 0.5) * cameraShakeIntensity;
-                camera.position.z += (Math.random() - 0.5) * cameraShakeIntensity;
-                cameraShakeIntensity -= 0.9 * delta;
-            }
-            camera.lookAt(actualCamLookAt);
-            camera.updateProjectionMatrix();
-
             audienceMembers.forEach(member => {
-                const multiFactor = 1.0 + (streakMultiplier * 0.4);
-                member.mesh.position.y = member.baseY + Math.abs(Math.sin(elapsedTime * member.speed * (multiFactor * 0.7) + member.offset)) * 0.18 * multiFactor;
+                const cheerIntensity = streakMultiplier > 1 ? 1.8 : 1.0;
+                member.mesh.position.y = member.baseY + Math.sin(elapsedTime * member.speed + member.offset) * 0.15 * cheerIntensity;
             });
 
             if(shockwaveMat.opacity > 0) {
@@ -654,6 +579,27 @@
                     pPos[i*3+2] += velocities[i].z * delta;
                 }
                 particleGeometry.attributes.position.needsUpdate = true;
+            }
+
+            if (cameraShakeIntensity > 0) {
+                camera.position.set(
+                    originalCamPos.x + (Math.random() - 0.5) * cameraShakeIntensity,
+                    originalCamPos.y + (Math.random() - 0.5) * cameraShakeIntensity,
+                    originalCamPos.z + (Math.random() - 0.5) * cameraShakeIntensity
+                );
+                cameraShakeIntensity -= 0.9 * delta;
+            } else {
+                if (currentCameraMode === 'action') {
+                    camera.position.x = THREE.MathUtils.lerp(camera.position.x, ballPos.x * 0.4 - 5, fastTrackRatio);
+                } else {
+                    camera.position.copy(originalCamPos);
+                }
+            }
+            
+            if (currentCameraMode === 'tactical') {
+                camera.lookAt(0, 0, 0);
+            } else {
+                camera.lookAt(0, 1.8, 0);
             }
 
             ballVelocity.y += gravity * delta;
@@ -691,33 +637,50 @@
 
             if (ballPos.y <= ballRadius) {
                 playMissSound();
-                triggerCommentary('fault');
                 baseScore = 0; streakMultiplier = 1; cumulativeScore = 0;
                 document.getElementById('score').innerText = 0;
                 document.getElementById('mult').innerText = "x1";
-                
+
                 ballPos.set((Math.random() > 0.5 ? 4.5 : -4.5), 6, (Math.random() - 0.5) * 2.5);
                 ballVelocity.set(ballPos.x > 0 ? -4.0 : 4.0, 4.2, 0);
-                ballCore.material.color.setHex(0xfd1d1d); ballCore.material.emissive.setHex(0xfd1d1d);
+                ballCore.material.color.setHex(0xF77737); ballCore.material.emissive.setHex(0xE1306C);
             }
 
             if (Math.abs(ballPos.z) > 4.4) ballVelocity.z *= -1;
             if (Math.abs(ballPos.x) > 8.9) ballVelocity.x *= -1;
 
             ballGroup.position.copy(ballPos);
+            
             ballCore.rotation.x += 1.8 * delta; ballCore.rotation.y += 2.4 * delta;
             ballRing1.rotation.y += 3.6 * delta; ballRing2.rotation.x += 3.6 * delta;
 
             renderer.render(scene, camera);
         }
 
+        // --- 11. WINDOW RESIZING GRAPHICS RATIO ---
         window.addEventListener('resize', () => {
             const width = window.innerWidth;
             const height = window.innerHeight;
             
-            targetFactor = width < 768 ? 6.5 : 4.8;
-            hitBoxCollider.geometry = new THREE.SphereGeometry(ballRadius * targetFactor, 8, 8);
+            camera.aspect = width / height;
             
+            if(width < 768) {
+                camera.fov = 76; 
+                if(currentCameraMode === 'broadcast') {
+                    camera.position.set(0, 8.0, 15.0);
+                    originalCamPos.set(0, 8.0, 15.0);
+                }
+                hitBoxCollider.geometry = new THREE.SphereGeometry(ballRadius * 6.2, 8, 8); 
+            } else {
+                camera.fov = 60;
+                if(currentCameraMode === 'broadcast') {
+                    camera.position.set(0, 7.0, 13.5);
+                    originalCamPos.set(0, 7.0, 13.5);
+                }
+                hitBoxCollider.geometry = new THREE.SphereGeometry(ballRadius * 4.6, 8, 8);
+            }
+            
+            camera.updateProjectionMatrix();
             renderer.setSize(width, height);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         });
