@@ -19,56 +19,56 @@
             touch-action: none;
         }
         
-        /* Enlarged High-Contrast Instagram Styled HUD */
+        /* Floating Scoreboard Layout - Positioned directly above the court net */
         #hud {
             position: absolute;
-            top: env(safe-area-inset-top, 12px);
+            top: 15%; /* Brought down directly into the central field of view above the court */
             left: 50%;
             transform: translateX(-50%);
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 96%;
-            max-width: 520px;
+            gap: 8px;
+            width: 94%;
+            max-width: 440px;
             pointer-events: none;
             z-index: 10;
         }
         .hud-card {
-            background: linear-gradient(135deg, rgba(131, 58, 180, 0.85) 0%, rgba(253, 29, 29, 0.85) 50%, rgba(252, 176, 69, 0.85) 100%);
+            background: linear-gradient(135deg, rgba(131, 58, 180, 0.9) 0%, rgba(253, 29, 29, 0.9) 50%, rgba(252, 176, 69, 0.9) 100%);
             border: 2px solid #ffffff;
-            clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);
-            box-shadow: 0 0 20px rgba(253, 29, 29, 0.4);
-            padding: 8px 6px;
+            clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);
+            box-shadow: 0 4px 15px rgba(253, 29, 29, 0.4);
+            padding: 6px 4px;
             color: white;
             text-align: center;
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(4px);
         }
-        .hud-card.high { border-color: #fcb045; box-shadow: 0 0 20px rgba(252, 176, 69, 0.5); }
-        .hud-card.multiplier { border-color: #833ab4; box-shadow: 0 0 20px rgba(131, 58, 180, 0.5); }
+        .hud-card.high { border-color: #fcb045; box-shadow: 0 4px 15px rgba(252, 176, 69, 0.4); }
+        .hud-card.multiplier { border-color: #833ab4; box-shadow: 0 4px 15px rgba(131, 58, 180, 0.4); }
         
-        .hud-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: #ffffff; opacity: 0.9; margin-bottom: 3px; font-weight: 800; }
-        .hud-value { font-size: 19px; font-weight: 900; font-family: monospace; text-shadow: 0 0 8px rgba(255,255,255,0.6); }
+        .hud-label { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; color: #ffffff; opacity: 0.9; margin-bottom: 2px; font-weight: 800; }
+        .hud-value { font-size: 16px; font-weight: 900; font-family: monospace; text-shadow: 0 0 6px rgba(255,255,255,0.6); }
         
-        /* Live Commentary Banner */
+        /* Live Commentary Banner - Docked neatly right beneath the central scoreboard */
         #commentary-box {
             position: absolute;
-            top: calc(env(safe-area-inset-top, 12px) + 64px);
+            top: calc(15% + 56px);
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 440px;
-            background: rgba(12, 5, 20, 0.88);
+            width: 88%;
+            max-width: 400px;
+            background: rgba(12, 5, 20, 0.9);
             border-left: 3.5px solid #e1306c;
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 6px 10px;
+            font-size: 11px;
             color: #ffffff;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             pointer-events: none;
             z-index: 10;
-            text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             font-style: italic;
         }
 
@@ -142,11 +142,11 @@
         .play-btn:active { transform: scale(0.95); }
         
         @media (min-width: 768px) {
-            .hud-card { padding: 10px 20px; border-width: 2.5px; }
-            .hud-value { font-size: 24px; }
-            .hud-label { font-size: 10px; }
+            .hud-card { padding: 8px 16px; }
+            .hud-value { font-size: 20px; }
+            .hud-label { font-size: 9px; }
             #instructions { font-size: 13px; width: auto; max-width: none; }
-            #commentary-box { font-size: 14px; max-width: 480px; top: calc(env(safe-area-inset-top, 12px) + 74px); }
+            #commentary-box { font-size: 12px; max-width: 440px; top: calc(15% + 64px); }
             #cam-toggle { font-size: 11px; padding: 8px 16px; }
         }
     </style>
@@ -189,9 +189,9 @@
         
         let currentCamMode = 0; 
         let targetCamPos = new THREE.Vector3();
-        let targetCamLookAt = new THREE.Vector3(0, 1.8, 0);
-        let actualCamLookAt = new THREE.Vector3(0, 1.8, 0);
-        let dynamicFovBase = 38; // Drastically lowered FOV to physically zoom closer onto court action
+        let targetCamLookAt = new THREE.Vector3(0, 1.4, 0);
+        let actualCamLookAt = new THREE.Vector3(0, 1.4, 0);
+        let dynamicFovBase = 38; 
 
         const ballRadius = 0.42;
         let ballGroup, ballCore, ballRing1, ballRing2, hitBoxCollider;
@@ -199,7 +199,6 @@
         const particleCount = 45;
         const velocities = [];
 
-        // Audio and Speech Variables
         let audioCtx, musicInterval;
         let dynamicVoiceProfile = null;
         let isArenaActive = false; 
@@ -355,7 +354,7 @@
         scene.fog = new THREE.FogExp2(0x120a1c, 0.025);
 
         camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        targetCamPos.set(0, 7.0, 13.5);
+        targetCamPos.set(0, 6.2, 12.0);
         camera.position.copy(targetCamPos);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -367,7 +366,7 @@
         renderer.toneMappingExposure = 1.3;
         document.body.appendChild(renderer.domElement);
 
-        // --- 4. THE ARENA SETUP WITH DIRECT OVERHEAD LIGHTS (PILLARS REMOVED) ---
+        // --- 4. THE ARENA SETUP ---
         scene.add(new THREE.AmbientLight(0x2d1738, 2.5));
         
         keyLightLeft = new THREE.SpotLight(0xfccc63, 15, 45, Math.PI/3.5, 0.5, 0.8);
@@ -528,7 +527,7 @@
             
             if (raycaster.intersectObject(hitBoxCollider).length > 0) {
                 playSpikeSound();
-                cameraShakeIntensity = 0.25;
+                cameraShakeIntensity = 0.22;
 
                 const activeColor = ballPos.x > 0 ? 0xe1306c : 0xfccc63;
 
@@ -585,25 +584,25 @@
         });
 
         function calculateTargetCameraMatrix(aspect) {
-            const widthScale = aspect < 1.6 ? (1.55 / aspect) : 1.0;
+            const widthScale = aspect < 1.6 ? (1.45 / aspect) : 1.0;
 
             if (currentCamMode === 0) {
-                targetCamPos.set(0, 7.0 * widthScale, 13.5 * widthScale);
-                targetCamLookAt.set(0, 1.8, 0);
+                targetCamPos.set(0, 5.8 * widthScale, 11.2 * widthScale);
+                targetCamLookAt.set(0, 1.4, 0);
                 camera.fov = aspect < 1.6 ? Math.min(85, dynamicFovBase * widthScale) : dynamicFovBase;
             } 
             else if (currentCamMode === 1) {
-                targetCamPos.set(ballPos.x * 0.4, 6.5 + (ballPos.y * 0.2), 12.0);
+                targetCamPos.set(ballPos.x * 0.4, 6.0 + (ballPos.y * 0.2), 10.5);
                 targetCamLookAt.set(ballPos.x * 0.7, ballPos.y * 0.5, ballPos.z * 0.5);
                 camera.fov = 38;
             } 
             else if (currentCamMode === 2) {
                 if(ballPos.x > 0) {
-                    targetCamPos.set(11.0, 5.5, ballPos.z * 0.4);
-                    targetCamLookAt.set(-3.0, 1.5, 0);
+                    targetCamPos.set(9.5, 4.8, ballPos.z * 0.4);
+                    targetCamLookAt.set(-2.5, 1.3, 0);
                 } else {
-                    targetCamPos.set(-11.0, 5.5, ballPos.z * 0.4);
-                    targetCamLookAt.set(3.0, 1.5, 0);
+                    targetCamPos.set(-9.5, 4.8, ballPos.z * 0.4);
+                    targetCamLookAt.set(2.5, 1.3, 0);
                 }
                 camera.fov = 40;
             }
