@@ -1,50 +1,56 @@
-# Vercel Web Analytics Installation Report
+# Vercel Speed Insights Configuration Report
 
 ## Summary
-Successfully installed and configured Vercel Web Analytics for the static HTML Volleyball game project.
-
-## Changes Made
-
-### Modified Files:
-- **index.html** - Added Vercel Web Analytics scripts in the `<head>` section
+Successfully installed and configured Vercel Speed Insights for the Cyber Volleyball: Overdrive game project.
 
 ## Implementation Details
 
 ### Framework Detection
-This project is a static HTML/JavaScript application (no framework detected), so I followed the **Static HTML** installation instructions from the official Vercel documentation.
+This project is a vanilla HTML/JavaScript application (no framework like React, Next.js, Vue, etc.), so the Speed Insights integration follows the "Vanilla/Other Frameworks" approach from the official Vercel documentation.
 
-### What Was Added
-Added two script tags to the `<head>` section of `index.html`:
+### Changes Made
 
-1. **Analytics Initialization Script**: Initializes the `window.va` function and queue for tracking
-2. **Deferred Analytics Script**: Loads the Vercel analytics tracking script with defer attribute for optimal performance
+**Modified File:**
+- `Volley Ball Game/index.html`
 
+**Added Speed Insights Integration:**
+Added the following script tags to the HTML `<head>` section (lines 12-15):
 ```html
-<!-- Vercel Web Analytics -->
 <script>
-    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
 </script>
-<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 ```
 
-### Location
-The analytics scripts were placed immediately after the meta tags and before the styles section to ensure:
-- Early initialization of the analytics queue
-- Deferred loading to not block page rendering
-- Proper tracking of page views from the start
+These scripts were placed immediately after the existing Vercel Analytics scripts to maintain consistency with the project's existing integration pattern.
 
-## Documentation Source
-All implementation steps were based on the latest official Vercel documentation fetched from:
-https://vercel.com/docs/analytics/quickstart
+### Integration Approach
+Following the official Vercel Speed Insights Quickstart documentation (fetched on July 3, 2026):
+1. The `window.si` function initializes a queue for Speed Insights events
+2. The deferred script loads from Vercel's CDN at `/_vercel/speed-insights/script.js`
+3. This approach matches the existing Vercel Analytics integration pattern already present in the project
+4. No package installation was required since this is a static HTML project without Node.js dependencies
 
-## Verification Steps
-After deployment to Vercel, analytics can be verified by:
-1. Visiting the deployed site
-2. Opening browser DevTools > Network tab
-3. Looking for a Fetch/XHR request to `/<unique-path>/view`
+### Why This Approach
+- **No package manager**: The project doesn't use npm/yarn/pnpm, so no `@vercel/speed-insights` package installation was needed
+- **Vercel-served scripts**: When deployed to Vercel, the platform automatically serves the Speed Insights script
+- **Minimal footprint**: The integration adds only 4 lines of code
+- **Consistent pattern**: Mirrors the existing Vercel Analytics integration already in the project
 
-## Notes
-- No package.json exists in this project (pure static HTML), so no package installation was required
-- The implementation is minimal and non-intrusive, preserving all existing functionality
-- Analytics will only become active once the site is deployed to Vercel with analytics enabled in the dashboard
-- The deferred loading ensures no performance impact on the game
+### Deployment Requirements
+To see Speed Insights data:
+1. Deploy the project to Vercel (via `vercel deploy` or Git integration)
+2. Enable Speed Insights in the Vercel project dashboard
+3. Data will appear in the dashboard after users visit the deployed site
+
+### Testing Notes
+- The Speed Insights scripts are loaded with the `defer` attribute, ensuring they don't block page rendering
+- The integration is passive and won't affect game performance
+- Speed Insights will automatically collect Core Web Vitals metrics (LCP, FID, CLS, etc.)
+
+## Verification
+- ✅ HTML syntax is valid
+- ✅ Scripts follow the official Vercel documentation pattern
+- ✅ Integration matches existing Vercel Analytics pattern
+- ✅ No breaking changes to existing functionality
+- ✅ Deferred loading prevents performance impact
