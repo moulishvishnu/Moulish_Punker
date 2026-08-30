@@ -1,38 +1,79 @@
 // Curated Campaign Brief Asia inspired industry facts & news snippets
-const industryData = [
-    {
-        category: "Creative Agency Brief",
-        stat: "78% YoY",
-        title: "APAC Digital Ad Spend Surges",
-        description: "Brands across Southeast Asia are heavily reallocating budgets toward performance-driven influencer ecosystems and interactive short-form video campaigns."
-    },
-    {
-        category: "Campaign Insights",
-        stat: "#1 Shift",
-        title: "AI-Generated Creative Personalization",
-        description: "Top regional ad agencies are integrating generative AI pipelines to customize localized video assets dynamically at a scale never seen before."
-    },
-    {
-        category: "Media Landscape",
-        stat: "3.4x ROI",
-        title: "The Rise of Immersive Commerce",
-        description: "Shoppable live-streaming modules embedded directly inside social platforms continue to outperform traditional web funnels across Asian markets."
-    },
-    {
-        category: "Industry Talent",
-        stat: "65% Demand",
-        title: "Cross-Disciplinary Creatives",
-        description: "Modern creative shops are prioritizing hybrid talent who blend data analysis capabilities with traditional copywriting and art direction."
-    },
-    {
-        category: "Sustainable Marketing",
-        stat: "82% Users",
-        title: "Eco-Conscious Brand Loyalty",
-        description: "Consumers in key APAC metropolitan hubs actively reward transparent supply chains and authentic green marketing initiatives over fast-fad promos."
+
+// We'll generate 10,000 facts at runtime using templates so the repo file stays compact.
+function generateFacts(count){
+    const categories = [
+        "Creative Agency Brief",
+        "Campaign Insights",
+        "Media Landscape",
+        "Industry Talent",
+        "Sustainable Marketing",
+        "Product & UX",
+        "Data & Analytics",
+        "Platform Trends",
+        "Ad Technology",
+        "Consumer Behavior"
+    ];
+
+    const statTemplates = ["{n}% YoY","#{n} Shift","{n}.0x ROI","{n}% Demand","{n}% Users","Top {n}"]; 
+
+    const titleTemplates = [
+        "APAC Digital Ad Spend Surges",
+        "AI-Generated Creative Personalization",
+        "The Rise of Immersive Commerce",
+        "Cross-Disciplinary Creatives",
+        "Eco-Conscious Brand Loyalty",
+        "Short-form Video Dominance",
+        "Conversational Commerce Uptake",
+        "First-party Data Activation",
+        "Streaming Audio Ad Growth",
+        "Micro-influencer Effectiveness"
+    ];
+
+    const descTemplates = [
+        "Markets are reallocating budgets to performance-driven influencer ecosystems and interactive short-form video.",
+        "Agencies are integrating generative AI pipelines to customize localized video assets dynamically at scale.",
+        "Shoppable live-streaming modules embedded inside social platforms are outperforming traditional funnels.",
+        "Brands prioritize hybrid talent blending data analysis with creative craft.",
+        "Consumers reward transparent supply chains and authentic green marketing initiatives.",
+        "Short-form content formats continue to shorten attention windows while increasing conversions.",
+        "Conversational touchpoints in commerce channels reduce friction and lift AOV.",
+        "First-party data strategies drive personalized experiences and measurement improvements.",
+        "Streaming audio formats provide efficient reach for niche audiences.",
+        "Micro-influencer partnerships show strong engagement-to-cost ratios in regional markets."
+    ];
+
+    const arr = new Array(count);
+    for(let i=0;i<count;i++){
+        const idx = i + 1;
+        const cat = categories[i % categories.length];
+        const titleBase = titleTemplates[i % titleTemplates.length];
+        const descBase = descTemplates[i % descTemplates.length];
+
+        // make a varied stat
+        const statTemplate = statTemplates[i % statTemplates.length];
+        const nVal = ((i * 7) % 90) + 10; // pseudo-random-ish 10..99
+        const stat = statTemplate.replace(/{n}/g, nVal).replace(/#\{n\}/g, `#${(i%10)+1}`);
+
+        let title = `${titleBase} — Insight #${String(idx).padStart(4,'0')}`;
+        let description = `${descBase} (Insight ${idx} of ${count})`;
+
+        arr[i] = {
+            category: cat,
+            stat: stat,
+            title: title,
+            description: description
+        };
     }
-];
+    return arr;
+}
+
+const industryData = generateFacts(10000);
 
 let currentIndex = 0;
+let autoplayIntervalMs = 4000;
+let autoplayTimer = null;
+let isPlaying = true;
 
 // DOM Elements
 const factCard = document.getElementById('factCard');
@@ -42,45 +83,125 @@ const cardTitle = document.getElementById('cardTitle');
 const cardDesc = document.getElementById('cardDesc');
 const counterBadge = document.getElementById('counterBadge');
 const nextBtn = document.getElementById('nextBtn');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const appContainer = document.getElementById('appContainer');
 
-// Function to update content with smooth layout micro-animations
-function updateCardData(index) {
-    // Trigger exit animation
-    factCard.classList.add('fade-out');
+// helper to format number with leading zero
+function two(n){ return String(n).padStart(2,'0'); }
 
-    setTimeout(() => {
-        const item = industryData[index];
+function renderIndexDisplay(i){
+    // show current with infinity to indicate infinite loop
+    counterBadge.textContent = `${two(i+1)} / ∞`;
+}
+
+// animation helpers: apply classes to trigger CSS keyframes
+function animateCard(nextIndex){
+    // add out class then replace content then add in class
+    factCard.classList.remove('transition-in','transition-out');
+    factCard.classList.add('transition-out');
+
+    setTimeout(()=> {
+        const item = industryData[nextIndex];
         cardCategory.textContent = item.category;
         cardStat.textContent = item.stat;
         cardTitle.textContent = item.title;
         cardDesc.textContent = item.description;
-        
-        // Update counter display with leading zero formatting
-        const currentStr = String(index + 1).padStart(2, '0');
-        const totalStr = String(industryData.length).padStart(2, '0');
-        counterBadge.textContent = `${currentStr} / ${totalStr}`;
+        renderIndexDisplay(nextIndex);
 
-        // Swap out exit class for enter class
-        factCard.classList.remove('fade-out');
-        factCard.classList.add('fade-in');
+        // force reflow to allow reapplying class
+        void factCard.offsetWidth;
+        factCard.classList.remove('transition-out');
+        factCard.classList.add('transition-in');
 
-        // Clean up enter class to settle back to natural state
-        setTimeout(() => {
-            factCard.classList.remove('fade-in');
-        }, 50);
-    }, 300);
+        // cleanup
+        setTimeout(()=> {
+            factCard.classList.remove('transition-in');
+        }, 500);
+    }, 280);
 }
 
-// Event Listener for Interaction Flow
+function goToIndex(idx){
+    currentIndex = (idx + industryData.length) % industryData.length;
+    animateCard(currentIndex);
+}
+
+function next(){
+    goToIndex(currentIndex + 1);
+}
+
+function prev(){
+    goToIndex(currentIndex - 1);
+}
+
+// autoplay control
+function startAutoplay(){
+    stopAutoplay();
+    autoplayTimer = setInterval(()=> {
+        next();
+    }, autoplayIntervalMs);
+    isPlaying = true;
+    updatePlayPauseUI();
+}
+
+function stopAutoplay(){
+    if(autoplayTimer) {
+        clearInterval(autoplayTimer);
+        autoplayTimer = null;
+    }
+    isPlaying = false;
+    updatePlayPauseUI();
+}
+
+function togglePlayPause(){
+    if(isPlaying) stopAutoplay();
+    else startAutoplay();
+}
+
+function updatePlayPauseUI(){
+    if(playPauseBtn){
+        playPauseBtn.textContent = isPlaying ? '⏸' : '▶';
+        playPauseBtn.setAttribute('aria-pressed', String(isPlaying));
+        playPauseBtn.title = isPlaying ? 'Pause autoplay' : 'Start autoplay';
+    }
+}
+
+// interactions
 nextBtn.addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % industryData.length;
-    updateCardData(currentIndex);
+    next();
+    // small UX: restart autoplay so user sees next then resumes
+    if(isPlaying) {
+        stopAutoplay();
+        setTimeout(startAutoplay, 1200);
+    }
 });
 
-// Initialize first view
-updateCardData(currentIndex);
+if(playPauseBtn){
+    playPauseBtn.addEventListener('click', () => {
+        togglePlayPause();
+    });
+}
 
-// Service Worker Registration for PWA Functionality
+// pause on hover/focus for better reading
+factCard.addEventListener('mouseenter', stopAutoplay);
+factCard.addEventListener('mouseleave', () => { if(isPlaying) startAutoplay(); });
+factCard.addEventListener('focus', stopAutoplay);
+factCard.addEventListener('blur', () => { if(isPlaying) startAutoplay(); });
+
+// keyboard support
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowRight') { next(); if(isPlaying){ stopAutoplay(); setTimeout(startAutoplay, 1200); } }
+    if(e.key === 'ArrowLeft') { prev(); if(isPlaying){ stopAutoplay(); setTimeout(startAutoplay, 1200); } }
+    if(e.key === ' ' || e.key === 'Spacebar') { // space toggles play/pause
+        e.preventDefault();
+        togglePlayPause();
+    }
+});
+
+// initialize first view
+goToIndex(currentIndex);
+startAutoplay();
+
+// Service Worker Registration for PWA Functionality (kept)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')

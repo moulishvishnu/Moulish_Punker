@@ -17,17 +17,23 @@
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container" id="appContainer">
+        <div class="bg-ornaments" aria-hidden="true"></div>
+
         <header class="app-header">
-            <div class="brand">
-                <span class="pulse-dot"></span>
-                <h1>Pulse<span>Asia</span></h1>
+            <div class="brand" role="banner">
+                <span class="pulse-dot" aria-hidden="true"></span>
+                <h1>Ray <span>Bytes</span></h1>
+                <p class="tagline">Daily bytes of marketing & tech</p>
             </div>
-            <div class="counter-badge" id="counterBadge">01 / 05</div>
+            <div class="controls">
+                <div class="counter-badge" id="counterBadge" aria-live="polite">01 / ∞</div>
+                <button id="playPauseBtn" class="icon-btn" aria-pressed="true" title="Pause autoplay">⏸</button>
+            </div>
         </header>
 
         <main class="card-viewport">
-            <div class="fact-card" id="factCard">
+            <div class="fact-card" id="factCard" tabindex="0" aria-live="polite">
                 <div class="card-tag" id="cardCategory">Agency Brief</div>
                 <div class="stat-highlight" id="cardStat">#1 Trend</div>
                 <h2 class="card-title" id="cardTitle">Loading Ray Bytes...</h2>
