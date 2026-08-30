@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ray Bytes</title>
+    
+    <meta name="theme-color" content="#0a0a0c">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="app-header">
+            <div class="brand">
+                <span class="pulse-dot"></span>
+                <h1>Pulse<span>Asia</span></h1>
+            </div>
+            <div class="counter-badge" id="counterBadge">01 / 05</div>
+        </header>
+
+        <main class="card-viewport">
+            <div class="fact-card" id="factCard">
+                <div class="card-tag" id="cardCategory">Agency Brief</div>
+                <div class="stat-highlight" id="cardStat">#1 Trend</div>
+                <h2 class="card-title" id="cardTitle">Loading Ray Bytes...</h2>
+                <p class="card-description" id="cardDesc">Please wait while we curate the latest updates from the region.</p>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <button class="cta-button" id="nextBtn" aria-label="Next Fact">
+                <span>Next Insight</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
