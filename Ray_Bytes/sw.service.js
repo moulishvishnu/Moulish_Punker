@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cb-insights-v1';
+const CACHE_NAME = 'ray-bytes-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
