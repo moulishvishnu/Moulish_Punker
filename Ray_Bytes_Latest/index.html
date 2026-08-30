@@ -235,21 +235,6 @@
             animation: subtlePulse 4s infinite;
         }
 
-        .source-credit {
-            text-align: center;
-            font-size: 12px;
-            color: var(--text-secondary);
-            opacity: 0.8;
-            font-weight: 500;
-        }
-        
-        .source-credit a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
-            padding-bottom: 1px;
-        }
-
         @media (max-width: 420px) {
             .card-title { font-size: 19px; }
             --card-padding-vertical: 28px;
@@ -276,7 +261,6 @@
             <button class="next-btn" id="nextBtn" onclick="loadNextFact()">
                 Next fact &gt;
             </button>
-            <div class="source-credit"><a href="https://campaignbriefasia.com/" target="_blank">campaignbriefasia.com</a></div>
         </div>
     </div>
 
@@ -304,10 +288,10 @@
         ];
 
         const cbDescriptions = [
-            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer connection across fragmented digital ecosystems.",
-            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions across multi-channel environments.",
-            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates and audience fragmentation.",
-            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile-first networks."
+            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer c[...]
+            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions ac[...]
+            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates and[...]
+            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile-first [...]
         ];
 
         function getFactData(index) {
