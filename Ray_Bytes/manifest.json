@@ -1,20 +1,20 @@
 {
-  "short_name": "Ray Bytes",
   "name": "Ray Bytes",
+  "short_name": "Ray Bytes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0b0d",
+  "theme_color": "#ff4d4d",
   "icons": [
     {
       "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
       "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "start_url": "./index.html",
-  "background_color": "#0a0a0c",
-  "theme_color": "#ff3366",
-  "display": "standalone"
+  ]
 }
