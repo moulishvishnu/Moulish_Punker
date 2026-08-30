@@ -1,6 +1,6 @@
 const CACHE_NAME = 'pulse-asia-v1';
 const urlsToCache = [
-  './index.html',
+  './index2.html',
   './style.css',
   './app.js',
   './manifest.json'
