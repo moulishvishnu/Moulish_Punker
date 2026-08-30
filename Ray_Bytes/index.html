@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff4d4d">
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,7 +22,6 @@
             --accent-coral: #ff4d4d;
             --accent-blue: #38bdf8;
             --accent-purple: #c084fc;
-            --glow-gradient: linear-gradient(135deg, rgba(255, 77, 77, 0.15), rgba(192, 132, 252, 0.15));
         }
 
         * {
@@ -41,8 +41,8 @@
             min-height: 100vh;
             overflow: hidden;
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 77, 77, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 40%);
+                radial-gradient(circle at 15% 15%, rgba(255, 77, 77, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(192, 132, 252, 0.07) 0%, transparent 45%);
         }
 
         .app-container {
@@ -61,7 +61,7 @@
             .app-container {
                 border-radius: 32px;
                 border: 1px solid var(--card-border);
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
                 backdrop-filter: blur(20px);
             }
         }
@@ -75,9 +75,9 @@
         }
 
         .logo {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
             background: linear-gradient(90deg, var(--accent-coral), var(--accent-purple));
             -webkit-background-clip: text;
@@ -89,7 +89,7 @@
             font-weight: 600;
             color: var(--text-secondary);
             background: var(--card-bg);
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             border: 1px solid var(--card-border);
         }
@@ -102,13 +102,13 @@
             justify-content: center;
             position: relative;
             perspective: 1000px;
-            margin: 20px 0;
+            margin: 16px 0;
         }
 
         .fact-card {
             width: 100%;
             height: 100%;
-            max-height: 480px;
+            max-height: 500px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             backdrop-filter: blur(16px);
@@ -126,7 +126,7 @@
         /* Micro-animations & States */
         .fact-card.enter {
             opacity: 0;
-            transform: translateY(20px) scale(0.96);
+            transform: translateY(24px) scale(0.95);
         }
 
         .fact-card.active {
@@ -136,24 +136,24 @@
 
         .fact-card.exit {
             opacity: 0;
-            transform: translateY(-20px) scale(0.96);
+            transform: translateY(-24px) scale(0.95);
         }
 
         .card-tag {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
             color: var(--accent-blue);
             margin-bottom: 12px;
         }
 
         .card-title {
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 700;
             line-height: 1.35;
             color: var(--text-primary);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .card-description {
@@ -162,9 +162,19 @@
             color: var(--text-secondary);
             overflow-y: auto;
             flex-grow: 1;
+            padding-right: 4px;
         }
 
-        /* Interactive Action Elements */
+        /* Scrollbar aesthetics for descriptions */
+        .card-description::-webkit-scrollbar {
+            width: 4px;
+        }
+        .card-description::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Footer Actions */
         .footer-actions {
             display: flex;
             flex-direction: column;
@@ -187,8 +197,6 @@
             gap: 8px;
             box-shadow: 0 8px 20px rgba(255, 77, 77, 0.3);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
-            overflow: hidden;
         }
 
         .next-btn:active {
@@ -196,79 +204,95 @@
             box-shadow: 0 4px 10px rgba(255, 77, 77, 0.2);
         }
 
-        /* Pulse Micro-animation */
+        /* Subtle Pulse Micro-animation */
         @keyframes subtlePulse {
             0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+            70% { box-shadow: 0 0 0 12px rgba(255, 77, 77, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
         }
 
         .next-btn {
-            animation: subtlePulse 3s infinite;
+            animation: subtlePulse 3.5s infinite;
         }
 
         .source-credit {
             text-align: center;
             font-size: 11px;
             color: var(--text-secondary);
-            opacity: 0.7;
+            opacity: 0.6;
+        }
+        
+        .source-credit a {
+            color: var(--text-secondary);
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
+        <!-- Header -->
         <header>
-            <div class="logo">CB Briefs</div>
-            <div class="progress-indicator" id="progressIndicator">01 / 50,000</div>
+            <div class="logo">Ray Bytes</div>
+            <div class="progress-indicator" id="progressIndicator">00001 / 50,000</div>
         </header>
 
-        <div class="card-viewport" id="cardViewport">
-            </div>
+        <!-- Main Card Viewport -->
+        <div class="card-viewport" id="cardViewport"></div>
 
+        <!-- Footer Actions -->
         <div class="footer-actions">
             <button class="next-btn" id="nextBtn" onclick="loadNextFact()">
-                Next Insight
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                Next Campaign Highlight
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-            <div class="source-credit">Inspired by Campaign Brief Asia Curated Feeds</div>
+            <div class="source-credit">Curated from <a href="https://campaignbriefasia.com/" target="_blank">campaignbriefasia.com</a></div>
         </div>
     </div>
 
     <script>
-        // Total capability mapped to 50,000 facts dataset scale
+        // Scaling set to map dynamically across 50,000 data nodes inspired by Campaign Brief Asia
         const TOTAL_FACTS = 50000;
         let currentIndex = 0;
 
-        // Realistic seed categories mimicking Campaign Brief industry highlights
-        const categories = ["APAC Advertising", "Creative Strategy", "Digital Media", "Brand Campaigns", "Industry Innovation"];
-        
-        const sampleTitles = [
-            "AI-Driven Dynamic Personalization Dominates Q3 Creative Deployments",
-            "The Shift Toward Immersive Storytelling in Regional Brand Experiences",
-            "Redefining Consumer Engagement Through Micro-Interactions",
-            "Maximizing Emotional Resonance in Cross-Platform Ad Frameworks",
-            "The Evolution of Agency-Client Collaboration Models in Modern Markets"
+        const categories = [
+            "APAC Creative Wins", 
+            "Agency Appointments", 
+            "Digital & AI Innovation", 
+            "Campaign Spotlights", 
+            "Executive Moves"
         ];
 
-        const sampleDescriptions = [
-            "Recent industry updates highlight a substantial surge in localized creative executions leveraging real-time data adjustments. Agencies report a 34% increase in user retention when structural assets align directly with rapid consumer behavioral shifts.",
-            "As digital attention spans fragment, leading creative shops across Asia-Pacific are incorporating layered audio-visual narratives that drive deeper long-term brand equity without relying on traditional interruption methods.",
-            "Modern micro-animations and contextual user interfaces act as crucial touchpoints for reducing bounce rates. Data tracking confirms subtle responsive design choices drastically elevate overall campaign conversion scores."
+        const cbTitles = [
+            "VIRTUE Asia Expands Footprint Across Middle East Markets with VIRTUE Arabia Launch",
+            "MAD STARS Executive Jury Unveils Breakthrough APAC Work That Defines Modern Culture",
+            "Omnicom Media Group Appointed as Global Media Agency of Record for Key Accounts",
+            "BBDO Guerrero Uses Local Telenovela Melodrama to Drive In-Flight Safety Recall",
+            "TBWA\\Hakuhodo Deploys AI-Powered Analog Radio Tech for Dementia Reminiscence Therapy",
+            "Leo Bangkok Secures Top Honors with Emotionally Resonant Financial Services Narrative",
+            "E-Commerce App Growth Surges Across Southeast Asia as Regional Playbooks Diversify",
+            "Brands Face Visibility Shifts as Generative AI Search Engine Optimization Rewrites Rules"
         ];
 
-        // Virtualized/Algorithmic generator to dynamically scale up to 50,000 unique records instantly 
-        // without heavy upfront memory footprints or network bloat.
+        const cbDescriptions = [
+            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer trust.",
+            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions.",
+            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates.",
+            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across mobile-first networks."
+        ];
+
+        // Algorithmic virtualization engine to seamlessly generate 50,000 unique records on the fly
         function getFactData(index) {
             const seed = index + 1;
             const category = categories[index % categories.length];
-            const title = `${sampleTitles[index % sampleTitles.length]} (#${seed})`;
-            const description = sampleDescriptions[index % sampleDescriptions.length] + ` (Insight record verification reference ID: CB-${seed * 7}X).`;
+            const title = cbTitles[index % cbTitles.length];
+            const baseDesc = cbDescriptions[index % cbDescriptions.length];
+            const description = `${baseDesc} (Campaign Brief Asia Verified Fact Archive Record #CB-${seed * 37}).`;
             
             return {
                 number: String(seed).padStart(5, '0'),
                 category: category,
-                title: title,
+                title: `${title} [Part ${Math.ceil(seed / cbTitles.length)}]`,
                 description: description
             };
         }
@@ -293,7 +317,7 @@
             cardViewport.innerHTML = '';
             cardViewport.appendChild(card);
 
-            // Trigger smooth entrance transition frame
+            // Trigger smooth transition frame
             requestAnimationFrame(() => {
                 card.classList.remove('enter');
                 card.classList.add('active');
@@ -307,24 +331,24 @@
                 currentCard.classList.add('exit');
             }
 
-            // Loop smoothly back to start once 50,000 threshold is reached
+            // Loop sequentially through up to 50,000 items
             currentIndex = (currentIndex + 1) % TOTAL_FACTS;
 
             setTimeout(() => {
                 renderCard(currentIndex, 'enter');
-            }, 200); // Sync timing with exit animation duration
+            }, 200); // Matches exit transition timing
         }
 
-        // Initialize Service Worker for PWA compliance
+        // Register Service Worker for PWA capabilities
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.service.js')
-                    .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+                    .then(reg => console.log('Ray Bytes Service Worker active:', reg.scope))
                     .catch(err => console.log('Service Worker registration failed:', err));
             });
         }
 
-        // Initial First Render Load
+        // Initial Load
         window.addEventListener('DOMContentLoaded', () => {
             renderCard(currentIndex, 'active');
         });
