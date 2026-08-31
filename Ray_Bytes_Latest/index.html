@@ -69,7 +69,7 @@
             }
         }
 
-        /* Centered logo with loop animation */
+        /* Centered logo with loop animation (hidden - replaced by .logo-wrap) */
         .center-logo {
             position: absolute;
             top: 12%;
@@ -85,6 +85,7 @@
             z-index: 5;
             animation: floatLoop 6s ease-in-out infinite;
             text-align: center;
+            display: none; /* hide old text-only logo */
         }
 
         @keyframes floatLoop {
@@ -272,6 +273,87 @@
             animation: subtlePulse 4s infinite;
         }
 
+        /* ---------- NEW: Logo + Spiral Animations (responsive) ---------- */
+        .logo-wrap {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 6;
+            pointer-events: none; /* allow clicks to pass through if needed */
+        }
+
+        /* Inline SVG sizing */
+        .logo-svg {
+            width: 68px;
+            height: 68px;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        /* Spiral path styling and animations */
+        .logo-spiral {
+            fill: none;
+            stroke-width: 2.6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke: url(#rg); /* gradient stroke defined in SVG defs */
+            transform-origin: 50% 50%;
+            animation: spin 9s linear infinite, dash 3.6s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        @keyframes dash {
+            0%   { stroke-dasharray: 2, 200; stroke-dashoffset: 0; }
+            50%  { stroke-dasharray: 90, 200; stroke-dashoffset: -30; }
+            100% { stroke-dasharray: 2, 200; stroke-dashoffset: -200; }
+        }
+
+        /* Brand text next to the icon */
+        .logo-text {
+            font-weight: 900;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            font-size: 18px;
+            line-height: 1;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            pointer-events: auto;
+        }
+
+        .logo-text .brand { margin-right: 6px; }
+        .logo-text .bytes { font-weight: 900; }
+
+        /* Respect users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .logo-spiral { animation: none; }
+            .center-logo { animation: none; }
+            .next-btn { animation: none; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 420px) {
+            .logo-svg { width: 48px; height: 48px; }
+            .logo-text { font-size: 14px; letter-spacing: 1.2px; }
+            .app-container { padding-top: 62px; } /* keep spacing for the logo */
+        }
+        @media (min-width: 1024px) {
+            .logo-svg { width: 88px; height: 88px; }
+            .logo-text { font-size: 20px; }
+        }
+
+        /* Slight adjustment so the card viewport has breathing room when logo present */
+        .card-viewport { margin-top: 36px; }
+
         @media (max-width: 420px) {
             .card-title { font-size: 19px; }
             --card-padding-vertical: 28px;
@@ -284,7 +366,31 @@
 <body>
 
     <div class="app-container">
-        <div class="center-logo">Ray Bytes</div>
+        <!-- NEW: logo + text -->
+        <div class="logo-wrap" aria-hidden="false">
+            <!-- Inline SVG spiral logo (no external file required) -->
+            <svg class="logo-svg" viewBox="0 0 100 100" role="img" aria-label="Ray Bytes logo">
+                <defs>
+                    <linearGradient id="rg" x1="0" x2="1">
+                        <stop offset="0" stop-color="#38bdf8"/>
+                        <stop offset="1" stop-color="#c084fc"/>
+                    </linearGradient>
+                </defs>
+                <!-- A compact spiral built from chained arcs; stroke animated by CSS -->
+                <path class="logo-spiral"
+                      d="M50 50
+                         m-20 0
+                         a20 20 0 1 0 40 0
+                         a16 16 0 1 1 -32 0
+                         a12 12 0 1 0 24 0
+                         a8 8 0 1 1 -16 0
+                         a4 4 0 1 0 8 0"/>
+            </svg>
+
+            <!-- Brand text (gradient clipped) -->
+            <div class="logo-text"><span class="brand">Ray</span><span class="bytes">Bytes</span></div>
+        </div>
+
         <div class="progress-indicator" id="progressIndicator">00001 / 50,000</div>
 
         <!-- Main Card Viewport -->
@@ -322,10 +428,10 @@
         ];
 
         const cbDescriptions = [
-            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer relevance.",
-            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions.",
-            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates.",
-            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile feeds."
+            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consu[...]",
+            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executio[...]",
+            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rate[...]",
+            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile f[...]"
         ];
 
         // Per-fact icons (placed in Ray_Bytes_Latest/icons/)
