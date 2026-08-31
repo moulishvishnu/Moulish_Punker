@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ray Bytes</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#ff4d4d">
     <link rel="preconnect" href="https://rsms.me/">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
@@ -54,7 +54,7 @@
             max-height: 880px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             padding: 28px;
             position: relative;
         }
@@ -69,25 +69,34 @@
             }
         }
 
-        /* Header Styling */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 12px;
-        }
-
-        .logo {
-            font-size: 15px;
-            font-weight: 800;
+        /* Centered logo with loop animation */
+        .center-logo {
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            font-weight: 900;
             letter-spacing: 1.8px;
             text-transform: uppercase;
             background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            z-index: 5;
+            animation: floatLoop 6s ease-in-out infinite;
+            text-align: center;
+        }
+
+        @keyframes floatLoop {
+            0% { transform: translate(-50%, 0) scale(1); }
+            50% { transform: translate(-50%, -6px) scale(1.02); }
+            100% { transform: translate(-50%, 0) scale(1); }
         }
 
         .progress-indicator {
+            position: absolute;
+            top: 6%;
+            right: 6%;
             font-size: 12px;
             font-weight: 600;
             color: var(--text-secondary);
@@ -96,6 +105,7 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(8px);
+            z-index: 5;
         }
 
         /* Card Section with advanced glassmorphism and gradient glow stroke */
@@ -129,7 +139,24 @@
             overflow: hidden;
         }
 
-        /* Luminous outer glow matching the reference image style */
+        .fact-card .card-top {
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+        .fact-icon {
+            width:56px;
+            height:56px;
+            border-radius:12px;
+            background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            flex: 0 0 56px;
+            overflow:hidden;
+        }
+        .fact-icon img { width:40px; height:40px; display:block; }
+
         .fact-card::after {
             content: '';
             position: absolute;
@@ -184,17 +211,25 @@
             overflow-y: auto;
             flex-grow: 1;
             padding-right: 6px;
+            margin-bottom:12px;
         }
 
-        .card-description::-webkit-scrollbar {
-            width: 4px;
+        .keywords {
+            display:flex;
+            gap:8px;
+            flex-wrap:wrap;
+            margin-top:8px;
         }
-        .card-description::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
+        .keyword {
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            padding:6px 10px;
+            border-radius:999px;
+            font-size:12px;
+            font-weight:700;
+            border:1px solid rgba(255,255,255,0.03);
         }
 
-        /* Footer Actions */
         .footer-actions {
             display: flex;
             flex-direction: column;
@@ -249,11 +284,8 @@
 <body>
 
     <div class="app-container">
-        <!-- Header -->
-        <header>
-            <div class="logo">Ray Bytes</div>
-            <div class="progress-indicator" id="progressIndicator">00001 / 50,000</div>
-        </header>
+        <div class="center-logo">Ray Bytes</div>
+        <div class="progress-indicator" id="progressIndicator">00001 / 50,000</div>
 
         <!-- Main Card Viewport -->
         <div class="card-viewport" id="cardViewport"></div>
@@ -290,10 +322,27 @@
         ];
 
         const cbDescriptions = [
-            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer c[...]
-            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions ac[...]
-            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates and[...]
-            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile-first [...]
+            "Industry reports tracked via Campaign Brief Asia highlight a major regional expansion strategy, focusing on localized cultural immersion and contextual storytelling to maximize consumer relevance.",
+            "Creative leaders at major international festivals emphasize that campaigns rooting themselves in genuine empathy and human truths consistently outperform generic high-budget executions.",
+            "Data models from recent quarters point toward a steep climb in performance-based, AI-enabled partnerships as brands optimize acquisition metrics against shifting media inflation rates.",
+            "Subtle layout choices, localized micro-interactions, and invisible technology integrations are transforming how digital touchpoints retain user attention across high-density mobile feeds."
+        ];
+
+        // Per-fact icons (placed in Ray_Bytes_Latest/icons/)
+        const factIcons = [
+            'icons/icon1.svg','icons/icon2.svg','icons/icon3.svg','icons/icon4.svg','icons/icon5.svg','icons/icon6.svg','icons/icon7.svg','icons/icon8.svg'
+        ];
+
+        // Per-fact keywords (sample keywords for tags)
+        const factKeywords = [
+            ['regional','expansion','localization'],
+            ['creative','festival','empathy'],
+            ['data','ai','partnerships'],
+            ['ux','micro-interactions','mobile'],
+            ['appointments','leadership','agency'],
+            ['ai','health','innovation'],
+            ['ecommerce','growth','southeast-asia'],
+            ['seo','generative-ai','visibility']
         ];
 
         function getFactData(index) {
@@ -301,13 +350,17 @@
             const category = categories[index % categories.length];
             const title = cbTitles[index % cbTitles.length];
             const baseDesc = cbDescriptions[index % cbDescriptions.length];
+            const keywords = factKeywords[index % factKeywords.length];
+            const icon = factIcons[index % factIcons.length];
             const description = `${baseDesc} (Campaign Brief Asia Verified Fact Archive Record #CB-${seed * 37}).`;
             
             return {
                 number: String(seed).padStart(5, '0'),
                 category: category,
                 title: `${title} [Part ${Math.ceil(seed / cbTitles.length)}]`,
-                description: description
+                description: description,
+                keywords: keywords,
+                icon: icon
             };
         }
 
@@ -321,11 +374,15 @@
             const card = document.createElement('div');
             card.className = `fact-card ${direction}`;
             card.innerHTML = `
-                <div>
-                    <div class="card-tag">${data.category}</div>
-                    <h2 class="card-title">${data.title}</h2>
+                <div class="card-top">
+                    <div class="fact-icon"><img src="${data.icon}" alt="icon"/></div>
+                    <div>
+                        <div class="card-tag">${data.category}</div>
+                        <h2 class="card-title">${data.title}</h2>
+                    </div>
                 </div>
                 <p class="card-description">${data.description}</p>
+                <div class="keywords">${data.keywords.map(k => `<span class="keyword">${k}</span>`).join('')}</div>
             `;
 
             cardViewport.innerHTML = '';
@@ -353,7 +410,7 @@
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.service.js')
+                navigator.serviceWorker.register('/sw.service.js')
                     .then(reg => console.log('Ray Bytes Service Worker active:', reg.scope))
                     .catch(err => console.log('Service Worker registration failed:', err));
             });
