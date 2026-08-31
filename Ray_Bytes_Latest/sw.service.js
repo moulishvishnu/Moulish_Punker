@@ -3,7 +3,15 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'
+  '/sw.service.js',
+  '/icons/icon1.svg',
+  '/icons/icon2.svg',
+  '/icons/icon3.svg',
+  '/icons/icon4.svg',
+  '/icons/icon5.svg',
+  '/icons/icon6.svg',
+  '/icons/icon7.svg',
+  '/icons/icon8.svg'
 ];
 
 self.addEventListener('install', (event) => {
