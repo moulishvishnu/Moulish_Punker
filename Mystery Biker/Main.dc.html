@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mystery Toggle</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&amp;display=swap">
+<style>
+body{margin:0}
+.win{position:absolute;left:0;top:0;width:266px;height:181px;overflow:hidden;animation:reveal 1.4s cubic-bezier(.2,.7,.2,1) both}
+.scene{position:absolute;left:0;top:0;width:266px;height:181px;transform-origin:55% 60%;animation:zoom 9s ease-in-out 1.2s infinite alternate}
+.photo{position:absolute;left:-30px;top:-78px;width:330px;height:405px;max-width:none;filter:grayscale(1) contrast(1.3) brightness(.85) sepia(1) hue-rotate(-42deg) saturate(3.5);animation:pan 9s ease-in-out 1.2s infinite alternate}
+.haze{position:absolute;left:-80px;top:0;width:420px;height:181px;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,50,60,.3) 50%,rgba(255,255,255,0) 100%);mix-blend-mode:screen;animation:haze 9s ease-in-out 1.2s infinite alternate}
+.bgfx{position:absolute;left:0;top:0;width:1024px;height:1365px}
+.spin{transform-box:fill-box;transform-origin:50% 50%;animation:spin 40s linear infinite}
+.needle{transform-box:fill-box;transform-origin:50% 50%;animation:needle 6s ease-in-out infinite alternate}
+.trail{animation:march 3s linear infinite}
+.topo{animation:breathe 7s ease-in-out infinite alternate}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes needle{from{transform:rotate(-14deg)}to{transform:rotate(18deg)}}
+@keyframes march{to{stroke-dashoffset:-28}}
+@keyframes breathe{from{opacity:.55}to{opacity:1}}
+.on{animation:onIn 1s ease-out .9s both,glow 2.4s ease-in-out 1.9s infinite alternate}
+.ontxt{display:inline-block;color:transparent;background:linear-gradient(100deg,#c1121f 0%,#c1121f 38%,#ff9a9a 50%,#c1121f 62%,#c1121f 100%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;animation:sweep 3.2s linear 1.9s infinite,flick 5s steps(1) 2.5s infinite}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes zoom{from{transform:scale(1)}to{transform:scale(1.15)}}
+@keyframes pan{from{transform:translate(18px,6px)}to{transform:translate(-26px,-8px)}}
+@keyframes haze{from{transform:translateX(-60px)}to{transform:translateX(80px)}}
+@keyframes onIn{from{opacity:0;transform:translateX(24px) scaleX(1.25);letter-spacing:22px}to{opacity:1;transform:translateX(0) scaleX(1);letter-spacing:8px}}
+@keyframes glow{from{filter:drop-shadow(0 0 2px rgba(255,30,45,.25))}to{filter:drop-shadow(0 0 16px rgba(255,30,45,.9))}}
+@keyframes sweep{from{background-position:130% 0}to{background-position:-30% 0}}
+@keyframes flick{0%,91%,95%,100%{opacity:1}92%,94%{opacity:.55}93%{opacity:.9}}
+@media (prefers-reduced-motion:reduce){.win,.scene,.photo,.haze,.on,.ontxt,.spin,.needle,.trail,.topo{animation:none}.ontxt{color:#e5252f;background:none}}
+</style>
+</helmet>
+<div style="position:relative;width:1024px;height:1365px;overflow:hidden;background:radial-gradient(ellipse 60% 45% at 52% 48%,#9a1016 0%,#5f0a0f 30%,#2a0508 58%,#0d0204 80%,#000000 100%);font-family:Helvetica,Arial,sans-serif">
+<svg class="bgfx" viewBox="0 0 1024 1365" width="1024" height="1365" aria-hidden="true"><g class="topo" fill="none" stroke="#ff3c46" stroke-opacity=".18" stroke-width="1.5"><g transform="translate(800 300) rotate(-20)"><ellipse rx="40" ry="26"></ellipse><ellipse rx="80" ry="54"></ellipse><ellipse rx="120" ry="84"></ellipse><ellipse rx="160" ry="116"></ellipse><ellipse rx="200" ry="150"></ellipse><ellipse rx="240" ry="186"></ellipse><ellipse rx="280" ry="224"></ellipse></g><g transform="translate(150 1000) rotate(25)"><ellipse rx="40" ry="30"></ellipse><ellipse rx="85" ry="62"></ellipse><ellipse rx="130" ry="96"></ellipse><ellipse rx="175" ry="132"></ellipse><ellipse rx="220" ry="170"></ellipse><ellipse rx="265" ry="210"></ellipse></g><g transform="translate(260 230) rotate(10)"><ellipse rx="50" ry="24"></ellipse><ellipse rx="100" ry="50"></ellipse><ellipse rx="150" ry="78"></ellipse><ellipse rx="200" ry="108"></ellipse></g></g><g transform="translate(880 150)"><g class="spin" fill="none" stroke="#ff4650" stroke-opacity=".55" stroke-width="1.5"><circle r="62"></circle><circle r="50" stroke-dasharray="2 8"></circle><path d="M0 -72 V-62 M0 62 V72 M-72 0 H-62 M62 0 H72" stroke-width="3"></path></g><g class="needle"><polygon points="0,-44 8,0 0,8 -8,0" fill="#ff3c46" fill-opacity=".85"></polygon><polygon points="0,44 8,0 0,8 -8,0" fill="#ffffff" fill-opacity=".35"></polygon></g><text x="0" y="-86" text-anchor="middle" font-family="Orbitron,Arial,sans-serif" font-weight="900" font-size="16" fill="#ff4650" fill-opacity=".8">N</text></g><path class="trail" d="M60 1290 C220 1210 110 1070 300 1000 S540 930 380 850 S270 810 290 790" fill="none" stroke="#ff4650" stroke-opacity=".7" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12"></path><circle cx="60" cy="1290" r="7" fill="#ff4650" fill-opacity=".8"></circle><polygon points="0,1365 0,1235 120,1150 210,1210 330,1085 450,1190 560,1120 700,1235 820,1130 930,1205 1024,1140 1024,1365" fill="#000000" fill-opacity=".6" stroke="#ff3c46" stroke-opacity=".35" stroke-width="2"></polygon><text x="60" y="110" font-family="Orbitron,Arial,sans-serif" font-weight="900" font-size="15" letter-spacing="5" fill="#ff4650" fill-opacity=".7">TRAIL 01 / SUMMIT BOUND</text><text x="512" y="1310" text-anchor="middle" font-family="Orbitron,Arial,sans-serif" font-weight="900" font-size="26" letter-spacing="12" fill="#ff4650" fill-opacity=".85">ADVENTURE AWAITS</text></svg>
+<div style="position:absolute;left:258px;top:760px;width:509px;height:70px;border-radius:50%;background:rgba(230,25,35,.5);filter:blur(30px)"></div>
+<div style="position:absolute;left:241px;top:592px;width:542px;height:181px;border-radius:500px;overflow:hidden;background:linear-gradient(180deg,#050505,#2b0a0d);box-shadow:0 10px 40px rgba(0,0,0,.65),0 0 0 1px rgba(230,30,40,.4)">
+<div class="win">
+<div class="scene">
+<img class="photo" src="./assets/ef5fd87aca5a4418d9d08e2993787a22.png" alt="Scrambler motorbike at sunset on a rocky hilltop">
+<div class="haze"></div>
+</div>
+</div>
+<div class="on" style="position:absolute;left:261px;top:0;width:276px;height:181px;display:flex;align-items:center;justify-content:center;font-family:Orbitron,'Eurostile','Arial Black',sans-serif;font-weight:900;font-size:66px;letter-spacing:8px"><span class="ontxt">ON</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1024,"height":1365}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
